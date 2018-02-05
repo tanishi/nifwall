@@ -12,8 +12,8 @@ func TestCreateSecurityGroup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fwName, Teardown := SetupTest(t)
-	defer Teardown(ctx, t)
+	fwName, teardown := setupTest(t)
+	defer teardown(ctx, t)
 
 	if err := CreateSecurityGroup(ctx, fwName, fwName); err != nil {
 		t.Fatal(err)
@@ -45,7 +45,7 @@ func TestCreateSecurityGroup(t *testing.T) {
 	<-done
 }
 
-func SetupTest(t *testing.T) (string, func(context.Context, *testing.T)) {
+func setupTest(t *testing.T) (string, func(context.Context, *testing.T)) {
 	endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
 	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
 	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
