@@ -9,3 +9,6 @@ script:
   - diff <(goimports -d .) <(printf "")
   - diff <(golint ./...) <(printf "")
   - go test -v ./...
+
+notifications:
+  email: false
