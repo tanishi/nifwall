@@ -3,12 +3,14 @@ language: go
 install:
   - go get -u github.com/tanishi/go-nifcloud
   - go get -u github.com/golang/lint/golint
+  - go get -u github.com/mattn/goveralls
 
 script:
   - go vet ./...
   - diff <(goimports -d .) <(printf "")
   - diff <(golint ./...) <(printf "")
-  - go test -v ./...
+  - go test -v -coverprofile=coverage.txt ./...
+  - $GOPATH/bin/goveralls -coverprofile=coverage.txt -covermode=count -service=travis-ci -repotoken $COVERALLS_TOKEN
 
 notifications:
   email: false
