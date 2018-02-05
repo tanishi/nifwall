@@ -8,6 +8,7 @@ import (
 
 var client *nifcloud.Client
 
+// CreateSecurityGroup create firewall group
 func CreateSecurityGroup(ctx context.Context, name, description string) error {
 	param := &nifcloud.CreateSecurityGroupInput{
 		GroupName:        name,

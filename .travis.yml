@@ -1,0 +1,11 @@
+language: go
+
+install:
+  - go get -u github.com/tanishi/go-nifcloud
+  - go get -u github.com/golang/lint/golint
+
+script:
+  - go vet ./...
+  - diff <(goimports -d .) <(printf "")
+  - diff <(golint ./...) <(printf "")
+  - go test -v ./...
