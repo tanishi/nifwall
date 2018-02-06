@@ -1,0 +1,13 @@
+name: FirewallGroupName
+description: FirewallGroupDescription
+availability_zone: ""
+ip_permissions:
+  - protocol: HTTP
+    from_port: 80
+    to_port: 80
+    in_out: IN
+    group_names:
+      - hoge
+    cidrip:
+      - "0.0.0.0/0"
+    description: memomemo
