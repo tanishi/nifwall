@@ -3,6 +3,7 @@ package nifwall
 import (
 	"io"
 	"io/ioutil"
+	"os"
 
 	"github.com/go-yaml/yaml"
 )
@@ -22,6 +23,16 @@ type IPPermission struct {
 	GroupNames  []string `yaml:"group_names"`
 	CidrIP      []string `yaml:"cidrip"`
 	Description string   `yaml:"description"`
+}
+
+func NewFirewallGroup(fpath string) (*FirewallGroup, error) {
+	file, err := os.Open(fpath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	return ParseYaml(file)
 }
 
 func ParseYaml(r io.Reader) (*FirewallGroup, error) {

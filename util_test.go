@@ -6,6 +6,37 @@ import (
 	"testing"
 )
 
+func TestNewFirewallGroup(t *testing.T) {
+	expected := &FirewallGroup{
+		Name:             "FirewallGroupName",
+		Description:      "FirewallGroupDescription",
+		AvailabilityZone: "",
+		IPPermissions: []IPPermission{
+			IPPermission{
+				Protocol:    "HTTP",
+				FromPort:    80,
+				ToPort:      81,
+				InOut:       "IN",
+				GroupNames:  []string{"hoge"},
+				CidrIP:      []string{"0.0.0.0/0"},
+				Description: "memomemo",
+			},
+		},
+	}
+
+	fpath := "./examples/example.yml"
+
+	actual, err := NewFirewallGroup(fpath)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("expected: %v,\nbut: %v", expected, actual)
+	}
+}
+
 func TestParseYaml(t *testing.T) {
 	data :=
 		`name: HOGE
