@@ -18,8 +18,8 @@ type FirewallGroup struct {
 
 type ipPermission struct {
 	Protocol    string   `yaml:"protocol"`
-	FromPort    int      `yaml:"from_port"`
-	ToPort      int      `yaml:"to_port"`
+	FromPort    string   `yaml:"from_port"`
+	ToPort      string   `yaml:"to_port"`
 	InOut       string   `yaml:"in_out"`
 	GroupNames  []string `yaml:"group_names"`
 	CidrIP      []string `yaml:"cidrip"`
