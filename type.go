@@ -8,14 +8,15 @@ import (
 	"github.com/go-yaml/yaml"
 )
 
+// FirewallGroup is struct for nifcloud API
 type FirewallGroup struct {
 	Name             string         `yaml:"name"`
 	Description      string         `yaml:"description"`
 	AvailabilityZone string         `yaml:"availability_zone"`
-	IPPermissions    []IPPermission `yaml:"ip_permissions"`
+	IPPermissions    []ipPermission `yaml:"ip_permissions"`
 }
 
-type IPPermission struct {
+type ipPermission struct {
 	Protocol    string   `yaml:"protocol"`
 	FromPort    int      `yaml:"from_port"`
 	ToPort      int      `yaml:"to_port"`
@@ -25,6 +26,7 @@ type IPPermission struct {
 	Description string   `yaml:"description"`
 }
 
+// NewFirewallGroup returns FirewallGroup with yaml file
 func NewFirewallGroup(fpath string) (*FirewallGroup, error) {
 	file, err := os.Open(fpath)
 	if err != nil {
@@ -35,6 +37,7 @@ func NewFirewallGroup(fpath string) (*FirewallGroup, error) {
 	return ParseYaml(file)
 }
 
+// ParseYaml returns FirewallGroup with yaml data
 func ParseYaml(r io.Reader) (*FirewallGroup, error) {
 	res, err := ioutil.ReadAll(r)
 
