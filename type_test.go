@@ -7,34 +7,50 @@ import (
 )
 
 func TestNewFirewallGroup(t *testing.T) {
-	expected := &FirewallGroup{
-		Name:             "FirewallGroupName",
-		Description:      "FirewallGroupDescription",
-		AvailabilityZone: "",
-		IPPermissions: []ipPermission{
-			ipPermission{
-				Protocol:    "HTTP",
-				FromPort:    80,
-				ToPort:      81,
-				InOut:       "IN",
-				GroupNames:  []string{"hoge"},
-				CidrIP:      []string{"0.0.0.0/0"},
-				Description: "memomemo",
+	t.Run("It should return FirewallGroup", func(t *testing.T) {
+		expected := &FirewallGroup{
+			Name:             "FirewallGroupName",
+			Description:      "FirewallGroupDescription",
+			AvailabilityZone: "",
+			IPPermissions: []ipPermission{
+				ipPermission{
+					Protocol:    "HTTP",
+					FromPort:    80,
+					ToPort:      81,
+					InOut:       "IN",
+					GroupNames:  []string{"hoge"},
+					CidrIP:      []string{"0.0.0.0/0"},
+					Description: "memomemo",
+				},
 			},
-		},
-	}
+		}
 
-	fpath := "./examples/example.yml"
+		fpath := "./examples/example.yml"
 
-	actual, err := NewFirewallGroup(fpath)
+		actual, err := NewFirewallGroup(fpath)
 
-	if err != nil {
-		t.Error(err)
-	}
+		if err != nil {
+			t.Error(err)
+		}
 
-	if !reflect.DeepEqual(expected, actual) {
-		t.Errorf("expected: %v,\nbut: %v", expected, actual)
-	}
+		if !reflect.DeepEqual(expected, actual) {
+			t.Errorf("expected: %v,\nbut: %v", expected, actual)
+		}
+	})
+
+	t.Run("It should return error", func(t *testing.T) {
+		_, err := NewFirewallGroup("")
+
+		if err == nil {
+			t.Errorf("NewFirewallGroup should return error")
+		}
+
+		_, err = ParseYaml(bytes.NewBufferString("hoge"))
+
+		if err == nil {
+			t.Errorf("ParseYaml return error")
+		}
+	})
 }
 
 func TestParseYaml(t *testing.T) {
