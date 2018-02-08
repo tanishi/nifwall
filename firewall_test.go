@@ -92,6 +92,47 @@ func TestAddRuleToSecurityGroup(t *testing.T) {
 	<-done
 }
 
+func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	fwName, teardown := setupTestRegisterInstancesWithSecurityGroup(ctx, t)
+	defer teardown(ctx, t)
+
+	serverName := "tanishiTest"
+
+	if err := RegisterInstancesWithSecurityGroup(ctx, fwName, serverName); err != nil {
+		t.Error(err)
+	}
+
+	done := make(chan *nifcloud.DescribeSecurityGroupsOutput, 0)
+
+	go func() {
+		defer close(done)
+
+		param := &nifcloud.DescribeSecurityGroupsInput{
+			GroupNames: []string{fwName},
+		}
+
+		for {
+			res, err := client.DescribeSecurityGroups(ctx, param)
+
+			if err != nil {
+				t.Errorf("Not Created")
+			}
+
+			status := res.SecurityGroupInfo[0].GroupStatus
+			resInstances := res.SecurityGroupInfo[0].Instances
+
+			if status == "applied" && len(resInstances) > 0 {
+				break
+			}
+		}
+	}()
+
+	<-done
+}
+
 func TestConvert(t *testing.T) {
 	expected := []nifcloud.IPPermission{
 		nifcloud.IPPermission{
@@ -178,6 +219,55 @@ func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string,
 
 	param := &nifcloud.CreateSecurityGroupInput{
 		GroupName: fwName,
+	}
+
+	client.CreateSecurityGroup(ctx, param)
+
+	done := make(chan struct{}, 0)
+
+	go func() {
+		defer close(done)
+
+		param := &nifcloud.DescribeSecurityGroupsInput{
+			GroupNames: []string{fwName},
+		}
+
+		for {
+			res, err := client.DescribeSecurityGroups(ctx, param)
+
+			if err != nil {
+				t.Errorf("Not Created")
+			}
+
+			status := res.SecurityGroupInfo[0].GroupStatus
+
+			if status == "applied" {
+				break
+			}
+		}
+	}()
+
+	<-done
+
+	return fwName, func(ctx context.Context, t *testing.T) {
+		param := &nifcloud.DeleteSecurityGroupInput{
+			GroupName: fwName,
+		}
+
+		if _, err := client.DeleteSecurityGroup(ctx, param); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
+	commonSetupTest(t)
+
+	fwName := "nifRegister"
+
+	param := &nifcloud.CreateSecurityGroupInput{
+		GroupName:        fwName,
+		AvailabilityZone: "west-12",
 	}
 
 	client.CreateSecurityGroup(ctx, param)
