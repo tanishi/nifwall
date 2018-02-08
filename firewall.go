@@ -29,6 +29,18 @@ func AddRuleToSecurityGroup(ctx context.Context, name string, permissions []ipPe
 	return err
 }
 
+// RegisterInstancesWithSecurityGroup apply firewall group to instance
+func RegisterInstancesWithSecurityGroup(ctx context.Context, fwName, serverName string) error {
+	param := &nifcloud.RegisterInstancesWithSecurityGroupInput{
+		GroupName:   fwName,
+		InstanceIDs: []string{serverName},
+	}
+
+	_, err := client.RegisterInstancesWithSecurityGroup(ctx, param)
+
+	return err
+}
+
 func convert(permissions []ipPermission) []nifcloud.IPPermission {
 	res := make([]nifcloud.IPPermission, 0, len(permissions))
 
