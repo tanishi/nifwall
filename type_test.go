@@ -15,8 +15,8 @@ func TestNewFirewallGroup(t *testing.T) {
 			IPPermissions: []ipPermission{
 				ipPermission{
 					Protocol:    "HTTP",
-					FromPort:    80,
-					ToPort:      81,
+					FromPort:    "80",
+					ToPort:      "81",
 					InOut:       "IN",
 					GroupNames:  []string{"hoge"},
 					CidrIP:      []string{"0.0.0.0/0"},
@@ -76,8 +76,8 @@ ip_permissions:
 		IPPermissions: []ipPermission{
 			ipPermission{
 				Protocol:    "HTTP",
-				FromPort:    80,
-				ToPort:      81,
+				FromPort:    "80",
+				ToPort:      "81",
 				InOut:       "IN",
 				GroupNames:  []string{"HTTPAllow"},
 				CidrIP:      []string{"0.0.0.0/0"},
