@@ -54,7 +54,7 @@ func TestAddRuleToSecurityGroup(t *testing.T) {
 	defer teardown(ctx, t)
 
 	permissions := []ipPermission{
-		ipPermission{
+		{
 			Protocol: "HTTP",
 			CidrIP:   []string{"0.0.0.0/0"},
 		},
@@ -135,7 +135,7 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 
 func TestConvert(t *testing.T) {
 	expected := []nifcloud.IPPermission{
-		nifcloud.IPPermission{
+		{
 			IPProtocol:  "HTTP",
 			FromPort:    "80",
 			ToPort:      "81",
@@ -145,7 +145,7 @@ func TestConvert(t *testing.T) {
 		},
 	}
 	actual := convert([]ipPermission{
-		ipPermission{
+		{
 			Protocol:    "HTTP",
 			FromPort:    "80",
 			ToPort:      "81",
@@ -164,7 +164,7 @@ func TestGenerateAuthorizeSecurityGroupIngressInput(t *testing.T) {
 	expected := &nifcloud.AuthorizeSecurityGroupIngressInput{
 		GroupName: "HOGE",
 		IPPermissions: []nifcloud.IPPermission{
-			nifcloud.IPPermission{
+			{
 				IPProtocol: "HTTP",
 				IPRanges:   []string{"0.0.0.0/0"},
 			},
@@ -172,7 +172,7 @@ func TestGenerateAuthorizeSecurityGroupIngressInput(t *testing.T) {
 	}
 
 	actual := generateAuthorizeSecurityGroupIngressInput("HOGE", []ipPermission{
-		ipPermission{
+		{
 			Protocol: "HTTP",
 			CidrIP:   []string{"0.0.0.0/0"},
 		},
