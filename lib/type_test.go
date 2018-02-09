@@ -25,7 +25,7 @@ func TestNewFirewallGroup(t *testing.T) {
 			},
 		}
 
-		fpath := "./examples/example.yml"
+		fpath := "../examples/example.yml"
 
 		actual, err := NewFirewallGroup(fpath)
 

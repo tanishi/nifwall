@@ -10,7 +10,9 @@ script:
   - go vet ./...
   - diff <(goimports -d .) <(printf "")
   - diff <(golint ./...) <(printf "")
-  - go test -v -coverprofile=coverage.txt -covermode=count ./...
+  - ./test.sh
+
+after_success:
   - $GOPATH/bin/goveralls -coverprofile=coverage.txt -covermode=count -service=travis-ci -repotoken $COVERALLS_TOKEN
 
 notifications:
