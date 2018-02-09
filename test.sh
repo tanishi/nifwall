@@ -1,3 +1,11 @@
+#!/bin/bash
+
+set -e
+
+COVERMODE=count
+COVERAGE_FILE=coverage.txt
+TMP_FILE=tmp.txt
+
 echo "mode: $COVERMODE" > $COVERAGE_FILE
 
 for PKG in $(go list ./...); do
