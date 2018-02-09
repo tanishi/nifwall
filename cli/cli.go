@@ -7,30 +7,32 @@ import (
 )
 
 const (
-	ExitCodeOK = iota
-	ExitCodeParseFlagError
+	exitCodeOK = iota
+	exitCodeParseFlagError
 )
 
+// CLI is structure for cli tool
 type CLI struct {
 	OutStream, ErrStream io.Writer
 }
 
-const Version string = "v0.1.0"
+const version string = "v0.1.0"
 
+// Run execute cli
 func (c *CLI) Run(args []string) int {
-	var version bool
+	var v bool
 	flags := flag.NewFlagSet("nifwall", flag.ContinueOnError)
 	flags.SetOutput(c.ErrStream)
-	flags.BoolVar(&version, "version", false, "Print version information and quit")
+	flags.BoolVar(&v, "version", false, "Print version information and quit")
 
 	if err := flags.Parse(args[1:]); err != nil {
-		return ExitCodeParseFlagError
+		return exitCodeParseFlagError
 	}
 
-	if version {
-		fmt.Fprintf(c.ErrStream, "nifwall version %s\n", Version)
-		return ExitCodeOK
+	if v {
+		fmt.Fprintf(c.ErrStream, "nifwall version %s\n", version)
+		return exitCodeOK
 	}
 
-	return ExitCodeOK
+	return exitCodeOK
 }
