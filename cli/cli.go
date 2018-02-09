@@ -30,9 +30,25 @@ func (c *CLI) Run(args []string) int {
 		return exitCodeParseFlagError
 	}
 
+	if len(args) < 2 {
+		fmt.Fprint(c.ErrStream, "list or update or apply")
+		return exitCodeOK
+	}
+
 	if v {
 		fmt.Fprintf(c.ErrStream, "nifwall version %s\n", version)
 		return exitCodeOK
+	}
+
+	switch args[1] {
+	case "list":
+		fmt.Fprintf(c.OutStream, "list")
+	case "update":
+		fmt.Fprintf(c.ErrStream, "update")
+	case "apply":
+		fmt.Fprintf(c.OutStream, "apply")
+	default:
+		flag.PrintDefaults()
 	}
 
 	return exitCodeOK
