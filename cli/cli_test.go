@@ -10,17 +10,17 @@ import (
 func TestRun_versionFlag(t *testing.T) {
 	outStream, errStream := new(bytes.Buffer), new(bytes.Buffer)
 	cli := &CLI{
-		outStream: outStream,
-		errStream: errStream,
+		OutStream: outStream,
+		ErrStream: errStream,
 	}
 	args := strings.Split("nifwall -version", " ")
 
 	status := cli.Run(args)
-	if status != ExitCodeOK {
-		t.Errorf("ExitStatus=%d, want %d", status, ExitCodeOK)
+	if status != exitCodeOK {
+		t.Errorf("ExitStatus=%d, want %d", status, exitCodeOK)
 	}
 
-	expected := fmt.Sprintf("nifwall version %s", Version)
+	expected := fmt.Sprintf("nifwall version %s", version)
 	actual := errStream.String()
 
 	if expected == actual {

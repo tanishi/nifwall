@@ -13,7 +13,8 @@ const (
 
 // CLI is structure for cli tool
 type CLI struct {
-	OutStream, ErrStream io.Writer
+	OutStream io.Writer
+	ErrStream io.Writer
 }
 
 const version string = "v0.1.0"
