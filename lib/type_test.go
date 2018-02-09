@@ -13,7 +13,7 @@ func TestNewFirewallGroup(t *testing.T) {
 			Description:      "FirewallGroupDescription",
 			AvailabilityZone: "",
 			IPPermissions: []ipPermission{
-				ipPermission{
+				{
 					Protocol:    "HTTP",
 					FromPort:    "80",
 					ToPort:      "81",
@@ -74,7 +74,7 @@ ip_permissions:
 		Description:      "HOGEHOGE",
 		AvailabilityZone: "west-11",
 		IPPermissions: []ipPermission{
-			ipPermission{
+			{
 				Protocol:    "HTTP",
 				FromPort:    "80",
 				ToPort:      "81",
