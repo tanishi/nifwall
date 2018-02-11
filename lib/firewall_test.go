@@ -319,3 +319,17 @@ func TestListInstances(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestListInappropriateInstances(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	commonSetupTest(t)
+	appropriateFWName := "nifwall"
+
+	if _, err := ListInappropriateInstances(ctx, appropriateFWName); err != nil {
+		t.Error(err)
+	}
+
+	a, _ := ListInappropriateInstances(ctx, appropriateFWName)
+}

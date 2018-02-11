@@ -2,11 +2,47 @@ package nifwall
 
 import (
 	"context"
+	"sync"
 
 	nifcloud "github.com/tanishi/go-nifcloud"
 )
 
 var client *nifcloud.Client
+
+func ListInappropriateInstances(ctx context.Context, fwName string) ([]string, error) {
+	instanceNames, err := ListInstances(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	wg := new(sync.WaitGroup)
+	mutex := new(sync.Mutex)
+	result := make([]string, 0)
+
+	for _, name := range instanceNames {
+		wg.Add(1)
+		go func(name string) {
+			defer wg.Done()
+			param := &nifcloud.DescribeInstanceAttributeInput{
+				InstanceID: name,
+				Attribute:  "groupId",
+			}
+
+			res, _ := client.DescribeInstanceAttribute(ctx, param)
+
+			if res.GroupID != fwName {
+				mutex.Lock()
+				result = append(result, name)
+				mutex.Unlock()
+			}
+		}(name)
+	}
+
+	wg.Wait()
+
+	return result, nil
+}
 
 // ListInstances returns instances name
 func ListInstances(ctx context.Context) ([]string, error) {
