@@ -8,6 +8,23 @@ import (
 
 var client *nifcloud.Client
 
+// ListInstances returns instances name
+func ListInstances(ctx context.Context) ([]string, error) {
+	res, err := client.DescribeInstances(ctx, &nifcloud.DescribeInstancesInput{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0, len(res.InstancesSet))
+
+	for _, instance := range res.InstancesSet {
+		result = append(result, instance.InstanceID)
+	}
+
+	return result, nil
+}
+
 // CreateSecurityGroup create firewall group
 func CreateSecurityGroup(ctx context.Context, name, description string) error {
 	param := &nifcloud.CreateSecurityGroupInput{

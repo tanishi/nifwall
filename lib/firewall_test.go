@@ -308,3 +308,14 @@ func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing
 		}
 	}
 }
+
+func TestListInstances(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	commonSetupTest(t)
+
+	if _, err := ListInstances(ctx); err != nil {
+		t.Error(err)
+	}
+}
