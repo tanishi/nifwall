@@ -42,11 +42,11 @@ func (c *CLI) Run(args []string) int {
 
 	switch args[1] {
 	case "list":
-		fmt.Fprintf(c.OutStream, "list")
+		fmt.Fprintf(c.OutStream, "list\n")
 	case "update":
-		fmt.Fprintf(c.ErrStream, "update")
+		fmt.Fprintf(c.ErrStream, "update\n")
 	case "apply":
-		fmt.Fprintf(c.OutStream, "apply")
+		fmt.Fprintf(c.OutStream, "apply\n")
 	default:
 		flag.PrintDefaults()
 	}
