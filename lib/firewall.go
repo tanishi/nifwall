@@ -7,7 +7,7 @@ import (
 	nifcloud "github.com/tanishi/go-nifcloud"
 )
 
-var client *nifcloud.Client
+var Client *nifcloud.Client
 
 func ListInappropriateInstances(ctx context.Context, fwName string) ([]string, error) {
 	instanceNames, err := ListInstances(ctx)
@@ -29,7 +29,7 @@ func ListInappropriateInstances(ctx context.Context, fwName string) ([]string, e
 				Attribute:  "groupId",
 			}
 
-			res, _ := client.DescribeInstanceAttribute(ctx, param)
+			res, _ := Client.DescribeInstanceAttribute(ctx, param)
 
 			if res.GroupID != fwName {
 				mutex.Lock()
@@ -46,7 +46,7 @@ func ListInappropriateInstances(ctx context.Context, fwName string) ([]string, e
 
 // ListInstances returns instances name
 func ListInstances(ctx context.Context) ([]string, error) {
-	res, err := client.DescribeInstances(ctx, &nifcloud.DescribeInstancesInput{})
+	res, err := Client.DescribeInstances(ctx, &nifcloud.DescribeInstancesInput{})
 
 	if err != nil {
 		return nil, err
@@ -68,7 +68,7 @@ func CreateSecurityGroup(ctx context.Context, name, description string) error {
 		GroupDescription: description,
 	}
 
-	_, err := client.CreateSecurityGroup(ctx, param)
+	_, err := Client.CreateSecurityGroup(ctx, param)
 
 	return err
 }
@@ -77,7 +77,7 @@ func CreateSecurityGroup(ctx context.Context, name, description string) error {
 func AddRuleToSecurityGroup(ctx context.Context, name string, permissions []ipPermission) error {
 	param := generateAuthorizeSecurityGroupIngressInput(name, permissions)
 
-	_, err := client.AuthorizeSecurityGroupIngress(ctx, param)
+	_, err := Client.AuthorizeSecurityGroupIngress(ctx, param)
 
 	return err
 }
@@ -89,7 +89,7 @@ func RegisterInstancesWithSecurityGroup(ctx context.Context, fwName, serverName 
 		InstanceIDs: []string{serverName},
 	}
 
-	_, err := client.RegisterInstancesWithSecurityGroup(ctx, param)
+	_, err := Client.RegisterInstancesWithSecurityGroup(ctx, param)
 
 	return err
 }

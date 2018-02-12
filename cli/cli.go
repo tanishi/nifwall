@@ -1,14 +1,20 @@
 package cli
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
+	"os"
+
+	nifcloud "github.com/tanishi/go-nifcloud"
+	nifwall "github.com/tanishi/nifwall/lib"
 )
 
 const (
 	exitCodeOK = iota
 	exitCodeParseFlagError
+	exitCodeError
 )
 
 // CLI is structure for cli tool
@@ -40,9 +46,27 @@ func (c *CLI) Run(args []string) int {
 		return exitCodeOK
 	}
 
+	endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
+	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
+	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
+
+	nifwall.Client, _ = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	switch args[1] {
 	case "list":
-		fmt.Fprintf(c.OutStream, "list\n")
+
+		instances, err := nifwall.ListInappropriateInstances(ctx, "fwName")
+
+		if err != nil {
+			fmt.Fprint(c.ErrStream, err)
+			return exitCodeError
+		}
+
+		fmt.Fprint(c.OutStream, instances)
+
 	case "update":
 		fmt.Fprintf(c.ErrStream, "update\n")
 	case "apply":
