@@ -8,70 +8,34 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	outStream, errStream := new(bytes.Buffer), new(bytes.Buffer)
-	cli := &CLI{
-		OutStream: outStream,
-		ErrStream: errStream,
-	}
-	args := strings.Split("nifwall -version", " ")
-
-	status := cli.Run(args)
-	if status != exitCodeOK {
-		t.Errorf("ExitStatus=%d, want %d", status, exitCodeOK)
+	cases := []struct {
+		args     string
+		expected string
+	}{
+		{"nifwall -version", fmt.Sprintf("nifwall version %s\n", version)},
+		{"nifwall list", fmt.Sprintf("list\n")},
+		{"nifwall update", fmt.Sprintf("update\n")},
+		{"nifwall apply", fmt.Sprintf("apply\n")},
 	}
 
-	expected := fmt.Sprintf("nifwall version %s\n", version)
-	actual := errStream.String()
+	for _, c := range cases {
+		outStream := new(bytes.Buffer)
 
-	if expected != actual {
-		t.Errorf("expected: %v, but: %v", expected, actual)
-	}
+		cli := &CLI{
+			OutStream: outStream,
+			ErrStream: outStream,
+		}
 
-	outStream.Reset()
-	errStream.Reset()
-	args = strings.Split("nifwall list", " ")
+		status := cli.Run(strings.Split(c.args, " "))
 
-	status = cli.Run(args)
-	if status != exitCodeOK {
-		t.Errorf("ExitStatus=%d, want %d", status, exitCodeOK)
-	}
+		if status != exitCodeOK {
+			t.Errorf("ExitStatus=%d, want %d", status, exitCodeOK)
+		}
 
-	expected = fmt.Sprintf("list\n")
-	actual = outStream.String()
+		actual := outStream.String()
 
-	if expected != actual {
-		t.Errorf("expected: %v, but: %v", expected, actual)
-	}
-
-	outStream.Reset()
-	errStream.Reset()
-	args = strings.Split("nifwall update", " ")
-
-	status = cli.Run(args)
-	if status != exitCodeOK {
-		t.Errorf("ExitStatus=%d, want %d", status, exitCodeOK)
-	}
-
-	expected = fmt.Sprintf("update\n")
-	actual = errStream.String()
-
-	if expected != actual {
-		t.Errorf("expected: %v, but: %v", expected, actual)
-	}
-
-	outStream.Reset()
-	errStream.Reset()
-	args = strings.Split("nifwall apply", " ")
-
-	status = cli.Run(args)
-	if status != exitCodeOK {
-		t.Errorf("ExitStatus=%d, want %d", status, exitCodeOK)
-	}
-
-	expected = fmt.Sprintf("apply\n")
-	actual = outStream.String()
-
-	if expected != actual {
-		t.Errorf("expected: %v, but: %v", expected, actual)
+		if c.expected != actual {
+			t.Errorf("expected: %v, but: %v", c.expected, actual)
+		}
 	}
 }
