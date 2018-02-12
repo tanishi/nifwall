@@ -121,6 +121,7 @@ func generateAuthorizeSecurityGroupIngressInput(name string, permissions []ipPer
 	}
 }
 
+// UpdateFirewall create firewall with rule
 func UpdateFirewall(ctx context.Context, fwPath string) error {
 	fg, err := NewFirewallGroup(fwPath)
 
