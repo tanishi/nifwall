@@ -9,16 +9,16 @@ import (
 func TestNewFirewallGroup(t *testing.T) {
 	t.Run("It should return FirewallGroup", func(t *testing.T) {
 		expected := &FirewallGroup{
-			Name:             "FirewallGroupName",
+			Name:             "nifwallTest",
 			Description:      "FirewallGroupDescription",
-			AvailabilityZone: "",
+			AvailabilityZone: "west-12",
 			IPPermissions: []ipPermission{
 				{
 					Protocol:    "HTTP",
 					FromPort:    "80",
 					ToPort:      "81",
 					InOut:       "IN",
-					GroupNames:  []string{"hoge"},
+					GroupNames:  []string{""},
 					CidrIP:      []string{"0.0.0.0/0"},
 					Description: "memomemo",
 				},
