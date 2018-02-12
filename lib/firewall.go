@@ -2,11 +2,66 @@ package nifwall
 
 import (
 	"context"
+	"sync"
 
 	nifcloud "github.com/tanishi/go-nifcloud"
 )
 
-var client *nifcloud.Client
+// Client is for using nifcloud api
+var Client *nifcloud.Client
+
+// ListInappropriateInstances returns inappropriate instances name
+func ListInappropriateInstances(ctx context.Context, fwName string) ([]string, error) {
+	instanceNames, err := ListInstances(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	wg := new(sync.WaitGroup)
+	mutex := new(sync.Mutex)
+	result := make([]string, 0)
+
+	for _, name := range instanceNames {
+		wg.Add(1)
+		go func(name string) {
+			defer wg.Done()
+			param := &nifcloud.DescribeInstanceAttributeInput{
+				InstanceID: name,
+				Attribute:  "groupId",
+			}
+
+			res, _ := Client.DescribeInstanceAttribute(ctx, param)
+
+			if res.GroupID != fwName {
+				mutex.Lock()
+				result = append(result, name)
+				mutex.Unlock()
+			}
+		}(name)
+	}
+
+	wg.Wait()
+
+	return result, nil
+}
+
+// ListInstances returns instances name
+func ListInstances(ctx context.Context) ([]string, error) {
+	res, err := Client.DescribeInstances(ctx, &nifcloud.DescribeInstancesInput{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0, len(res.InstancesSet))
+
+	for _, instance := range res.InstancesSet {
+		result = append(result, instance.InstanceID)
+	}
+
+	return result, nil
+}
 
 // CreateSecurityGroup create firewall group
 func CreateSecurityGroup(ctx context.Context, name, description string) error {
@@ -15,7 +70,7 @@ func CreateSecurityGroup(ctx context.Context, name, description string) error {
 		GroupDescription: description,
 	}
 
-	_, err := client.CreateSecurityGroup(ctx, param)
+	_, err := Client.CreateSecurityGroup(ctx, param)
 
 	return err
 }
@@ -24,7 +79,7 @@ func CreateSecurityGroup(ctx context.Context, name, description string) error {
 func AddRuleToSecurityGroup(ctx context.Context, name string, permissions []ipPermission) error {
 	param := generateAuthorizeSecurityGroupIngressInput(name, permissions)
 
-	_, err := client.AuthorizeSecurityGroupIngress(ctx, param)
+	_, err := Client.AuthorizeSecurityGroupIngress(ctx, param)
 
 	return err
 }
@@ -36,7 +91,7 @@ func RegisterInstancesWithSecurityGroup(ctx context.Context, fwName, serverName 
 		InstanceIDs: []string{serverName},
 	}
 
-	_, err := client.RegisterInstancesWithSecurityGroup(ctx, param)
+	_, err := Client.RegisterInstancesWithSecurityGroup(ctx, param)
 
 	return err
 }
