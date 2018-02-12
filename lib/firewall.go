@@ -156,9 +156,5 @@ func UpdateFirewall(ctx context.Context, fwPath string) error {
 
 	wg.Wait()
 
-	if err := AddRuleToSecurityGroup(ctx, fg.Name, fg.IPPermissions); err != nil {
-		return err
-	}
-
-	return nil
+	return AddRuleToSecurityGroup(ctx, fg.Name, fg.IPPermissions)
 }
