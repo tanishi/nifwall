@@ -7,8 +7,10 @@ import (
 	nifcloud "github.com/tanishi/go-nifcloud"
 )
 
+// Client is for using nifcloud api
 var Client *nifcloud.Client
 
+// ListInappropriateInstances returns inappropriate instances name
 func ListInappropriateInstances(ctx context.Context, fwName string) ([]string, error) {
 	instanceNames, err := ListInstances(ctx)
 
