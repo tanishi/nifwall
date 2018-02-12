@@ -7,23 +7,36 @@ import (
 	"testing"
 )
 
-func TestRun_versionFlag(t *testing.T) {
-	outStream, errStream := new(bytes.Buffer), new(bytes.Buffer)
-	cli := &CLI{
-		OutStream: outStream,
-		ErrStream: errStream,
+func TestRun(t *testing.T) {
+	cases := []struct {
+		args     string
+		expected string
+	}{
+		{"nifwall -version", fmt.Sprintf("nifwall version %s\n", version)},
+		{"nifwall list", fmt.Sprintf("list\n")},
+		{"nifwall update", fmt.Sprintf("update\n")},
+		{"nifwall apply", fmt.Sprintf("apply\n")},
+		{"nifwall", fmt.Sprintf("list or update or apply")},
 	}
-	args := strings.Split("nifwall -version", " ")
 
-	status := cli.Run(args)
-	if status != exitCodeOK {
-		t.Errorf("ExitStatus=%d, want %d", status, exitCodeOK)
-	}
+	for _, c := range cases {
+		outStream := new(bytes.Buffer)
 
-	expected := fmt.Sprintf("nifwall version %s", version)
-	actual := errStream.String()
+		cli := &CLI{
+			OutStream: outStream,
+			ErrStream: outStream,
+		}
 
-	if expected == actual {
-		t.Errorf("expected: %v, but: %v", expected, actual)
+		status := cli.Run(strings.Split(c.args, " "))
+
+		if status != exitCodeOK {
+			t.Errorf("ExitStatus=%d, want %d", status, exitCodeOK)
+		}
+
+		actual := outStream.String()
+
+		if c.expected != actual {
+			t.Errorf("expected: %v, but: %v", c.expected, actual)
+		}
 	}
 }
