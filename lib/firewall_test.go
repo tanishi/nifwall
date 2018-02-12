@@ -330,6 +330,4 @@ func TestListInappropriateInstances(t *testing.T) {
 	if _, err := ListInappropriateInstances(ctx, appropriateFWName); err != nil {
 		t.Error(err)
 	}
-
-	a, _ := ListInappropriateInstances(ctx, appropriateFWName)
 }
