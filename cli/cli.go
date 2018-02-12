@@ -57,8 +57,16 @@ func (c *CLI) Run(args []string) int {
 
 	switch args[1] {
 	case "list":
+		listFlags := flag.NewFlagSet("list", flag.ContinueOnError)
 
-		instances, err := nifwall.ListInappropriateInstances(ctx, "fwName")
+		var fw string
+		flags.StringVar(&fw, "fw", "nifwall", "specify firewall")
+
+		if err := listFlags.Parse(args[2:]); err != nil {
+			return exitCodeParseFlagError
+		}
+
+		instances, err := nifwall.ListInappropriateInstances(ctx, fw)
 
 		if err != nil {
 			fmt.Fprint(c.ErrStream, err)
