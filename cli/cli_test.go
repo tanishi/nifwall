@@ -14,7 +14,6 @@ func TestRun(t *testing.T) {
 	}{
 		{"nifwall -version", fmt.Sprintf("nifwall version %s\n", version)},
 		{"nifwall update", fmt.Sprintf("update\n")},
-		{"nifwall apply", fmt.Sprintf("apply\n")},
 		{"nifwall", fmt.Sprintf("list or update or apply")},
 	}
 
