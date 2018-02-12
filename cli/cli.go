@@ -78,7 +78,17 @@ func (c *CLI) Run(args []string) int {
 	case "update":
 		fmt.Fprintf(c.ErrStream, "update\n")
 	case "apply":
-		fmt.Fprintf(c.OutStream, "apply\n")
+		applyFlags := flag.NewFlagSet("apply", flag.ContinueOnError)
+
+		var fw string
+		applyFlags.StringVar(&fw, "fw", "nifwall", "specify firewall")
+
+		if err := applyFlags.Parse(args[2:]); err != nil {
+			return exitCodeParseFlagError
+		}
+
+		nifwall.RegisterInstancesWithSecurityGroup(ctx, fw, applyFlags.Arg(0))
+
 	default:
 		flag.PrintDefaults()
 	}
