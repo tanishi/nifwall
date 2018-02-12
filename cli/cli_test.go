@@ -16,6 +16,7 @@ func TestRun(t *testing.T) {
 		{"nifwall list", fmt.Sprintf("list\n")},
 		{"nifwall update", fmt.Sprintf("update\n")},
 		{"nifwall apply", fmt.Sprintf("apply\n")},
+		{"nifwall", fmt.Sprintf("list or update or apply")},
 	}
 
 	for _, c := range cases {
