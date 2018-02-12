@@ -16,7 +16,7 @@ func TestCreateSecurityGroup(t *testing.T) {
 	fwName, teardown := setupTestCreateSecurityGroup(t)
 	defer teardown(ctx, t)
 
-	if err := CreateSecurityGroup(ctx, fwName, fwName); err != nil {
+	if err := CreateSecurityGroup(ctx, fwName, fwName, ""); err != nil {
 		t.Error(err)
 	}
 

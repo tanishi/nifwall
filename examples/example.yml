@@ -1,13 +1,13 @@
-name: FirewallGroupName
+name: nifwallTest
 description: FirewallGroupDescription
-availability_zone: ""
+availability_zone: "west-12"
 ip_permissions:
   - protocol: HTTP
-    from_port: 80
-    to_port: 81
+    from_port: "80"
+    to_port: "81"
     in_out: IN
     group_names:
-      - hoge
+      - ""
     cidrip:
       - "0.0.0.0/0"
     description: memomemo

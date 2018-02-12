@@ -76,7 +76,22 @@ func (c *CLI) Run(args []string) int {
 		fmt.Fprint(c.OutStream, instances)
 
 	case "update":
-		fmt.Fprintf(c.ErrStream, "update\n")
+		updateFlags := flag.NewFlagSet("update", flag.ContinueOnError)
+
+		var f string
+		updateFlags.StringVar(&f, "f", "nifwall", "specify firewall")
+
+		if err := updateFlags.Parse(args[2:]); err != nil {
+			return exitCodeParseFlagError
+		}
+
+		err := nifwall.UpdateFirewall(ctx, f)
+
+		if err != nil {
+			fmt.Fprint(c.ErrStream, err)
+			return exitCodeError
+		}
+
 	case "apply":
 		applyFlags := flag.NewFlagSet("apply", flag.ContinueOnError)
 

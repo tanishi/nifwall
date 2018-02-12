@@ -64,10 +64,11 @@ func ListInstances(ctx context.Context) ([]string, error) {
 }
 
 // CreateSecurityGroup create firewall group
-func CreateSecurityGroup(ctx context.Context, name, description string) error {
+func CreateSecurityGroup(ctx context.Context, name, description, zone string) error {
 	param := &nifcloud.CreateSecurityGroupInput{
 		GroupName:        name,
 		GroupDescription: description,
+		AvailabilityZone: zone,
 	}
 
 	_, err := Client.CreateSecurityGroup(ctx, param)
@@ -118,4 +119,42 @@ func generateAuthorizeSecurityGroupIngressInput(name string, permissions []ipPer
 		GroupName:     name,
 		IPPermissions: convert(permissions),
 	}
+}
+
+// UpdateFirewall create firewall with rule
+func UpdateFirewall(ctx context.Context, fwPath string) error {
+	fg, err := NewFirewallGroup(fwPath)
+
+	if err != nil {
+		return err
+	}
+
+	if err := CreateSecurityGroup(ctx, fg.Name, fg.Description, fg.AvailabilityZone); err != nil {
+		return err
+	}
+
+	wg := new(sync.WaitGroup)
+	go func() {
+		wg.Add(1)
+
+		param := &nifcloud.DescribeSecurityGroupsInput{
+			GroupNames: []string{fg.Name},
+		}
+
+		for {
+			res, _ := Client.DescribeSecurityGroups(ctx, param)
+
+			status := res.SecurityGroupInfo[0].GroupStatus
+
+			if status == "applied" {
+				break
+			}
+		}
+
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	return AddRuleToSecurityGroup(ctx, fg.Name, fg.IPPermissions)
 }

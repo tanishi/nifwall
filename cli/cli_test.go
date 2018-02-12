@@ -13,7 +13,6 @@ func TestRun(t *testing.T) {
 		expected string
 	}{
 		{"nifwall -version", fmt.Sprintf("nifwall version %s\n", version)},
-		{"nifwall update", fmt.Sprintf("update\n")},
 		{"nifwall", fmt.Sprintf("list or update or apply")},
 	}
 
