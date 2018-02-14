@@ -9,19 +9,58 @@ import (
 	nifcloud "github.com/tanishi/go-nifcloud"
 )
 
-type mock struct {
-	NifCloud
-	CreateSecurityGroup func(context.Context, string, string, string)
-}
-
 func TestMain(m *testing.M) {
 	endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
 	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
 	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
 
-	Client.C, _ = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
+	if testing.Short() {
+		Client.C = &mock{}
+	} else {
+		Client.C, _ = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
+	}
 
 	os.Exit(m.Run())
+}
+
+type mock struct {
+	NifCloud
+}
+
+func (m *mock) DescribeInstanceAttribute(ctx context.Context, param *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error) {
+	return m.MockDescribeInstanceAttribute(ctx, param)
+}
+
+func (m *mock) MockDescribeInstanceAttribute(ctx context.Context, param *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error) {
+	return &nifcloud.DescribeInstanceAttributeOutput{
+		GroupID: "groupID",
+	}, nil
+}
+
+func (m *mock) DescribeInstances(ctx context.Context, param *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error) {
+	return m.MockDescribeInstances(ctx, param)
+}
+
+func (m *mock) MockDescribeInstances(ctx context.Context, param *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error) {
+	return &nifcloud.DescribeInstancesOutput{
+		InstancesSet: []nifcloud.InstancesItem{
+			{
+				InstanceID: "test1",
+			},
+			{
+				InstanceID: "test2",
+			},
+			{
+				InstanceID: "test3",
+			},
+			{
+				InstanceID: "test4",
+			},
+			{
+				InstanceID: "test5",
+			},
+		},
+	}, nil
 }
 
 func TestCreateSecurityGroup(t *testing.T) {
