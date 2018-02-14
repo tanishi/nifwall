@@ -8,11 +8,11 @@ import (
 )
 
 // Client is for using nifcloud api
-var Client *nifcloud.Client
+var Client client
 
 // ListInappropriateInstances returns inappropriate instances name
-func ListInappropriateInstances(ctx context.Context, fwName string) ([]string, error) {
-	instanceNames, err := ListInstances(ctx)
+func (c *client) ListInappropriateInstances(ctx context.Context, fwName string) ([]string, error) {
+	instanceNames, err := c.ListInstances(ctx)
 
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func ListInappropriateInstances(ctx context.Context, fwName string) ([]string, e
 				Attribute:  "groupId",
 			}
 
-			res, _ := Client.DescribeInstanceAttribute(ctx, param)
+			res, _ := c.C.DescribeInstanceAttribute(ctx, param)
 
 			if res.GroupID != fwName {
 				mutex.Lock()
@@ -47,8 +47,8 @@ func ListInappropriateInstances(ctx context.Context, fwName string) ([]string, e
 }
 
 // ListInstances returns instances name
-func ListInstances(ctx context.Context) ([]string, error) {
-	res, err := Client.DescribeInstances(ctx, &nifcloud.DescribeInstancesInput{})
+func (c *client) ListInstances(ctx context.Context) ([]string, error) {
+	res, err := c.C.DescribeInstances(ctx, &nifcloud.DescribeInstancesInput{})
 
 	if err != nil {
 		return nil, err
@@ -64,35 +64,35 @@ func ListInstances(ctx context.Context) ([]string, error) {
 }
 
 // CreateSecurityGroup create firewall group
-func CreateSecurityGroup(ctx context.Context, name, description, zone string) error {
+func (c *client) CreateSecurityGroup(ctx context.Context, name, description, zone string) error {
 	param := &nifcloud.CreateSecurityGroupInput{
 		GroupName:        name,
 		GroupDescription: description,
 		AvailabilityZone: zone,
 	}
 
-	_, err := Client.CreateSecurityGroup(ctx, param)
+	_, err := c.C.CreateSecurityGroup(ctx, param)
 
 	return err
 }
 
 // AddRuleToSecurityGroup add rule to firewall group
-func AddRuleToSecurityGroup(ctx context.Context, name string, permissions []ipPermission) error {
+func (c *client) AddRuleToSecurityGroup(ctx context.Context, name string, permissions []ipPermission) error {
 	param := generateAuthorizeSecurityGroupIngressInput(name, permissions)
 
-	_, err := Client.AuthorizeSecurityGroupIngress(ctx, param)
+	_, err := c.C.AuthorizeSecurityGroupIngress(ctx, param)
 
 	return err
 }
 
 // RegisterInstancesWithSecurityGroup apply firewall group to instance
-func RegisterInstancesWithSecurityGroup(ctx context.Context, fwName, serverName string) error {
+func (c *client) RegisterInstancesWithSecurityGroup(ctx context.Context, fwName, serverName string) error {
 	param := &nifcloud.RegisterInstancesWithSecurityGroupInput{
 		GroupName:   fwName,
 		InstanceIDs: []string{serverName},
 	}
 
-	_, err := Client.RegisterInstancesWithSecurityGroup(ctx, param)
+	_, err := c.C.RegisterInstancesWithSecurityGroup(ctx, param)
 
 	return err
 }
@@ -122,14 +122,14 @@ func generateAuthorizeSecurityGroupIngressInput(name string, permissions []ipPer
 }
 
 // UpdateFirewall create firewall with rule
-func UpdateFirewall(ctx context.Context, fwPath string) error {
+func (c *client) UpdateFirewall(ctx context.Context, fwPath string) error {
 	fg, err := NewFirewallGroup(fwPath)
 
 	if err != nil {
 		return err
 	}
 
-	if err := CreateSecurityGroup(ctx, fg.Name, fg.Description, fg.AvailabilityZone); err != nil {
+	if err := c.CreateSecurityGroup(ctx, fg.Name, fg.Description, fg.AvailabilityZone); err != nil {
 		return err
 	}
 
@@ -142,7 +142,7 @@ func UpdateFirewall(ctx context.Context, fwPath string) error {
 		}
 
 		for {
-			res, _ := Client.DescribeSecurityGroups(ctx, param)
+			res, _ := c.C.DescribeSecurityGroups(ctx, param)
 
 			status := res.SecurityGroupInfo[0].GroupStatus
 
@@ -156,5 +156,5 @@ func UpdateFirewall(ctx context.Context, fwPath string) error {
 
 	wg.Wait()
 
-	return AddRuleToSecurityGroup(ctx, fg.Name, fg.IPPermissions)
+	return c.AddRuleToSecurityGroup(ctx, fg.Name, fg.IPPermissions)
 }

@@ -2,12 +2,28 @@ package nifwall
 
 import (
 	"context"
+	"flag"
 	"os"
 	"reflect"
 	"testing"
 
 	nifcloud "github.com/tanishi/go-nifcloud"
 )
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
+	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
+	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
+
+	if testing.Short() {
+		Client.C = &mock{}
+	} else {
+		Client.C, _ = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
+	}
+
+	os.Exit(m.Run())
+}
 
 func TestCreateSecurityGroup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -16,7 +32,7 @@ func TestCreateSecurityGroup(t *testing.T) {
 	fwName, teardown := setupTestCreateSecurityGroup(t)
 	defer teardown(ctx, t)
 
-	if err := CreateSecurityGroup(ctx, fwName, fwName, ""); err != nil {
+	if err := Client.CreateSecurityGroup(ctx, fwName, fwName, ""); err != nil {
 		t.Error(err)
 	}
 
@@ -29,7 +45,7 @@ func TestCreateSecurityGroup(t *testing.T) {
 				GroupNames: []string{fwName},
 			}
 
-			res, err := Client.DescribeSecurityGroups(ctx, param)
+			res, err := Client.C.DescribeSecurityGroups(ctx, param)
 
 			if err != nil {
 				t.Errorf("Not Created")
@@ -60,7 +76,7 @@ func TestAddRuleToSecurityGroup(t *testing.T) {
 		},
 	}
 
-	if err := AddRuleToSecurityGroup(ctx, fwName, permissions); err != nil {
+	if err := Client.AddRuleToSecurityGroup(ctx, fwName, permissions); err != nil {
 		t.Error(err)
 	}
 
@@ -74,7 +90,7 @@ func TestAddRuleToSecurityGroup(t *testing.T) {
 		}
 
 		for {
-			res, err := Client.DescribeSecurityGroups(ctx, param)
+			res, err := Client.C.DescribeSecurityGroups(ctx, param)
 
 			if err != nil {
 				t.Errorf("Not Created")
@@ -101,7 +117,7 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 
 	serverName := "tanishiTest"
 
-	if err := RegisterInstancesWithSecurityGroup(ctx, fwName, serverName); err != nil {
+	if err := Client.RegisterInstancesWithSecurityGroup(ctx, fwName, serverName); err != nil {
 		t.Error(err)
 	}
 
@@ -115,7 +131,7 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 		}
 
 		for {
-			res, err := Client.DescribeSecurityGroups(ctx, param)
+			res, err := Client.C.DescribeSecurityGroups(ctx, param)
 
 			if err != nil {
 				t.Errorf("Not Created")
@@ -183,22 +199,7 @@ func TestGenerateAuthorizeSecurityGroupIngressInput(t *testing.T) {
 	}
 }
 
-func commonSetupTest(t *testing.T) {
-	endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
-	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
-	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
-
-	var err error
-	Client, err = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func setupTestCreateSecurityGroup(t *testing.T) (string, func(context.Context, *testing.T)) {
-	commonSetupTest(t)
-
 	fwName := "nifwallTest"
 
 	return fwName, func(ctx context.Context, t *testing.T) {
@@ -206,22 +207,20 @@ func setupTestCreateSecurityGroup(t *testing.T) (string, func(context.Context, *
 			GroupName: fwName,
 		}
 
-		if _, err := Client.DeleteSecurityGroup(ctx, param); err != nil {
+		if _, err := Client.C.DeleteSecurityGroup(ctx, param); err != nil {
 			t.Fatal(err)
 		}
 	}
 }
 
 func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
-	commonSetupTest(t)
-
 	fwName := "nifwallRuleTest"
 
 	param := &nifcloud.CreateSecurityGroupInput{
 		GroupName: fwName,
 	}
 
-	Client.CreateSecurityGroup(ctx, param)
+	Client.C.CreateSecurityGroup(ctx, param)
 
 	done := make(chan struct{}, 0)
 
@@ -233,7 +232,7 @@ func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string,
 		}
 
 		for {
-			res, err := Client.DescribeSecurityGroups(ctx, param)
+			res, err := Client.C.DescribeSecurityGroups(ctx, param)
 
 			if err != nil {
 				t.Errorf("Not Created")
@@ -254,15 +253,13 @@ func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string,
 			GroupName: fwName,
 		}
 
-		if _, err := Client.DeleteSecurityGroup(ctx, param); err != nil {
+		if _, err := Client.C.DeleteSecurityGroup(ctx, param); err != nil {
 			t.Fatal(err)
 		}
 	}
 }
 
 func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
-	commonSetupTest(t)
-
 	fwName := "nifRegister"
 
 	param := &nifcloud.CreateSecurityGroupInput{
@@ -270,7 +267,7 @@ func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing
 		AvailabilityZone: "west-12",
 	}
 
-	Client.CreateSecurityGroup(ctx, param)
+	Client.C.CreateSecurityGroup(ctx, param)
 
 	done := make(chan struct{}, 0)
 
@@ -282,7 +279,7 @@ func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing
 		}
 
 		for {
-			res, err := Client.DescribeSecurityGroups(ctx, param)
+			res, err := Client.C.DescribeSecurityGroups(ctx, param)
 
 			if err != nil {
 				t.Errorf("Not Created")
@@ -303,7 +300,7 @@ func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing
 			GroupName: fwName,
 		}
 
-		if _, err := Client.DeleteSecurityGroup(ctx, param); err != nil {
+		if _, err := Client.C.DeleteSecurityGroup(ctx, param); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -313,9 +310,7 @@ func TestListInstances(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	commonSetupTest(t)
-
-	if _, err := ListInstances(ctx); err != nil {
+	if _, err := Client.ListInstances(ctx); err != nil {
 		t.Error(err)
 	}
 }
@@ -324,10 +319,86 @@ func TestListInappropriateInstances(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	commonSetupTest(t)
 	appropriateFWName := "nifwall"
 
-	if _, err := ListInappropriateInstances(ctx, appropriateFWName); err != nil {
+	if _, err := Client.ListInappropriateInstances(ctx, appropriateFWName); err != nil {
 		t.Error(err)
 	}
+}
+
+type mock struct {
+	NifCloud
+}
+
+func (m *mock) DescribeInstanceAttribute(ctx context.Context, param *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error) {
+	return m.MockDescribeInstanceAttribute(ctx, param)
+}
+
+func (m *mock) MockDescribeInstanceAttribute(ctx context.Context, param *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error) {
+	return &nifcloud.DescribeInstanceAttributeOutput{
+		GroupID: "groupID",
+	}, nil
+}
+
+func (m *mock) DescribeInstances(ctx context.Context, param *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error) {
+	return m.MockDescribeInstances(ctx, param)
+}
+
+func (m *mock) MockDescribeInstances(ctx context.Context, param *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error) {
+	return &nifcloud.DescribeInstancesOutput{
+		InstancesSet: []nifcloud.InstancesItem{
+			{
+				InstanceID: "test1",
+			},
+			{
+				InstanceID: "test2",
+			},
+			{
+				InstanceID: "test3",
+			},
+			{
+				InstanceID: "test4",
+			},
+			{
+				InstanceID: "test5",
+			},
+		},
+	}, nil
+}
+
+func (m *mock) DescribeSecurityGroups(ctx context.Context, param *nifcloud.DescribeSecurityGroupsInput) (*nifcloud.DescribeSecurityGroupsOutput, error) {
+	return &nifcloud.DescribeSecurityGroupsOutput{
+		SecurityGroupInfo: []nifcloud.SecurityGroupInfoItem{
+			{
+				GroupStatus: "applied",
+				GroupName:   param.GroupNames[0],
+				IPPermission: []nifcloud.IPPermissionItem{
+					{
+						IPProtocol: "HTTP",
+					},
+				},
+				Instances: []nifcloud.InstanceItem{
+					{
+						InstanceID: "test",
+					},
+				},
+			},
+		},
+	}, nil
+}
+
+func (m *mock) CreateSecurityGroup(ctx context.Context, param *nifcloud.CreateSecurityGroupInput) (*nifcloud.CreateSecurityGroupOutput, error) {
+	return &nifcloud.CreateSecurityGroupOutput{}, nil
+}
+
+func (m *mock) DeleteSecurityGroup(ctx context.Context, param *nifcloud.DeleteSecurityGroupInput) (*nifcloud.DeleteSecurityGroupOutput, error) {
+	return &nifcloud.DeleteSecurityGroupOutput{}, nil
+}
+
+func (m *mock) AuthorizeSecurityGroupIngress(ctx context.Context, param *nifcloud.AuthorizeSecurityGroupIngressInput) (*nifcloud.AuthorizeSecurityGroupIngressOutput, error) {
+	return &nifcloud.AuthorizeSecurityGroupIngressOutput{}, nil
+}
+
+func (m *mock) RegisterInstancesWithSecurityGroup(ctx context.Context, param *nifcloud.RegisterInstancesWithSecurityGroupInput) (*nifcloud.RegisterInstancesWithSecurityGroupOutput, error) {
+	return &nifcloud.RegisterInstancesWithSecurityGroupOutput{}, nil
 }

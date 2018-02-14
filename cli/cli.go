@@ -50,7 +50,7 @@ func (c *CLI) Run(args []string) int {
 	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
 	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
 
-	nifwall.Client, _ = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
+	nifwall.Client.C, _ = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -66,7 +66,7 @@ func (c *CLI) Run(args []string) int {
 			return exitCodeParseFlagError
 		}
 
-		instances, err := nifwall.ListInappropriateInstances(ctx, fw)
+		instances, err := nifwall.Client.ListInappropriateInstances(ctx, fw)
 
 		if err != nil {
 			fmt.Fprint(c.ErrStream, err)
@@ -85,7 +85,7 @@ func (c *CLI) Run(args []string) int {
 			return exitCodeParseFlagError
 		}
 
-		err := nifwall.UpdateFirewall(ctx, f)
+		err := nifwall.Client.UpdateFirewall(ctx, f)
 
 		if err != nil {
 			fmt.Fprint(c.ErrStream, err)
@@ -102,7 +102,7 @@ func (c *CLI) Run(args []string) int {
 			return exitCodeParseFlagError
 		}
 
-		nifwall.RegisterInstancesWithSecurityGroup(ctx, fw, applyFlags.Arg(0))
+		nifwall.Client.RegisterInstancesWithSecurityGroup(ctx, fw, applyFlags.Arg(0))
 
 	default:
 		flag.PrintDefaults()
