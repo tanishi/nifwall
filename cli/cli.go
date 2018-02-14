@@ -5,9 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"os"
 
-	nifcloud "github.com/tanishi/go-nifcloud"
 	nifwall "github.com/tanishi/nifwall/lib"
 )
 
@@ -21,6 +19,7 @@ const (
 type CLI struct {
 	OutStream io.Writer
 	ErrStream io.Writer
+	Client    *nifwall.Client
 }
 
 const version string = "v0.1.0"
@@ -46,12 +45,6 @@ func (c *CLI) Run(args []string) int {
 		return exitCodeOK
 	}
 
-	endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
-	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
-	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
-
-	nifwall.Client.C, _ = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -66,7 +59,7 @@ func (c *CLI) Run(args []string) int {
 			return exitCodeParseFlagError
 		}
 
-		instances, err := nifwall.Client.ListInappropriateInstances(ctx, fw)
+		instances, err := c.Client.ListInappropriateInstances(ctx, fw)
 
 		if err != nil {
 			fmt.Fprint(c.ErrStream, err)
@@ -85,7 +78,7 @@ func (c *CLI) Run(args []string) int {
 			return exitCodeParseFlagError
 		}
 
-		err := nifwall.Client.UpdateFirewall(ctx, f)
+		err := c.Client.UpdateFirewall(ctx, f)
 
 		if err != nil {
 			fmt.Fprint(c.ErrStream, err)
@@ -102,7 +95,7 @@ func (c *CLI) Run(args []string) int {
 			return exitCodeParseFlagError
 		}
 
-		nifwall.Client.RegisterInstancesWithSecurityGroup(ctx, fw, applyFlags.Arg(0))
+		c.Client.RegisterInstancesWithSecurityGroup(ctx, fw, applyFlags.Arg(0))
 
 	default:
 		flag.PrintDefaults()
