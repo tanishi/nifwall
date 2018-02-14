@@ -7,8 +7,12 @@ import (
 	nifcloud "github.com/tanishi/go-nifcloud"
 )
 
-// Client is for using nifcloud api
-var Client *nifcloud.Client
+type client struct {
+	c *nifcloud.Client
+}
+
+// Client.c is for using nifcloud api
+var Client client
 
 // ListInappropriateInstances returns inappropriate instances name
 func ListInappropriateInstances(ctx context.Context, fwName string) ([]string, error) {
@@ -31,7 +35,7 @@ func ListInappropriateInstances(ctx context.Context, fwName string) ([]string, e
 				Attribute:  "groupId",
 			}
 
-			res, _ := Client.DescribeInstanceAttribute(ctx, param)
+			res, _ := Client.c.DescribeInstanceAttribute(ctx, param)
 
 			if res.GroupID != fwName {
 				mutex.Lock()
@@ -48,7 +52,7 @@ func ListInappropriateInstances(ctx context.Context, fwName string) ([]string, e
 
 // ListInstances returns instances name
 func ListInstances(ctx context.Context) ([]string, error) {
-	res, err := Client.DescribeInstances(ctx, &nifcloud.DescribeInstancesInput{})
+	res, err := Client.c.DescribeInstances(ctx, &nifcloud.DescribeInstancesInput{})
 
 	if err != nil {
 		return nil, err
@@ -71,7 +75,7 @@ func CreateSecurityGroup(ctx context.Context, name, description, zone string) er
 		AvailabilityZone: zone,
 	}
 
-	_, err := Client.CreateSecurityGroup(ctx, param)
+	_, err := Client.c.CreateSecurityGroup(ctx, param)
 
 	return err
 }
@@ -80,7 +84,7 @@ func CreateSecurityGroup(ctx context.Context, name, description, zone string) er
 func AddRuleToSecurityGroup(ctx context.Context, name string, permissions []ipPermission) error {
 	param := generateAuthorizeSecurityGroupIngressInput(name, permissions)
 
-	_, err := Client.AuthorizeSecurityGroupIngress(ctx, param)
+	_, err := Client.c.AuthorizeSecurityGroupIngress(ctx, param)
 
 	return err
 }
@@ -92,7 +96,7 @@ func RegisterInstancesWithSecurityGroup(ctx context.Context, fwName, serverName 
 		InstanceIDs: []string{serverName},
 	}
 
-	_, err := Client.RegisterInstancesWithSecurityGroup(ctx, param)
+	_, err := Client.c.RegisterInstancesWithSecurityGroup(ctx, param)
 
 	return err
 }
@@ -142,7 +146,7 @@ func UpdateFirewall(ctx context.Context, fwPath string) error {
 		}
 
 		for {
-			res, _ := Client.DescribeSecurityGroups(ctx, param)
+			res, _ := Client.c.DescribeSecurityGroups(ctx, param)
 
 			status := res.SecurityGroupInfo[0].GroupStatus
 
