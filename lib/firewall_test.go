@@ -377,6 +377,11 @@ func (m *mock) DescribeSecurityGroups(ctx context.Context, param *nifcloud.Descr
 						IPProtocol: "HTTP",
 					},
 				},
+				Instances: []nifcloud.InstanceItem{
+					{
+						InstanceID: "test",
+					},
+				},
 			},
 		},
 	}, nil
@@ -392,4 +397,8 @@ func (m *mock) DeleteSecurityGroup(ctx context.Context, param *nifcloud.DeleteSe
 
 func (m *mock) AuthorizeSecurityGroupIngress(ctx context.Context, param *nifcloud.AuthorizeSecurityGroupIngressInput) (*nifcloud.AuthorizeSecurityGroupIngressOutput, error) {
 	return &nifcloud.AuthorizeSecurityGroupIngressOutput{}, nil
+}
+
+func (m *mock) RegisterInstancesWithSecurityGroup(ctx context.Context, param *nifcloud.RegisterInstancesWithSecurityGroupInput) (*nifcloud.RegisterInstancesWithSecurityGroupOutput, error) {
+	return &nifcloud.RegisterInstancesWithSecurityGroupOutput{}, nil
 }
