@@ -1,12 +1,28 @@
 package nifwall
 
 import (
+	"context"
 	"io"
 	"io/ioutil"
 	"os"
 
 	"github.com/go-yaml/yaml"
+	nifcloud "github.com/tanishi/go-nifcloud"
 )
+
+type client struct {
+	C NifCloud
+}
+
+type NifCloud interface {
+	AuthorizeSecurityGroupIngress(context.Context, *nifcloud.AuthorizeSecurityGroupIngressInput) (*nifcloud.AuthorizeSecurityGroupIngressOutput, error)
+	CreateSecurityGroup(context.Context, *nifcloud.CreateSecurityGroupInput) (*nifcloud.CreateSecurityGroupOutput, error)
+	DescribeSecurityGroups(context.Context, *nifcloud.DescribeSecurityGroupsInput) (*nifcloud.DescribeSecurityGroupsOutput, error)
+	DescribeInstances(context.Context, *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error)
+	DescribeInstanceAttribute(context.Context, *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error)
+	DeleteSecurityGroup(context.Context, *nifcloud.DeleteSecurityGroupInput) (*nifcloud.DeleteSecurityGroupOutput, error)
+	RegisterInstancesWithSecurityGroup(context.Context, *nifcloud.RegisterInstancesWithSecurityGroupInput) (*nifcloud.RegisterInstancesWithSecurityGroupOutput, error)
+}
 
 // FirewallGroup is struct for nifcloud API
 type FirewallGroup struct {

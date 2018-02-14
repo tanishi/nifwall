@@ -9,6 +9,21 @@ import (
 	nifcloud "github.com/tanishi/go-nifcloud"
 )
 
+type mock struct {
+	NifCloud
+	CreateSecurityGroup func(context.Context, string, string, string)
+}
+
+func TestMain(m *testing.M) {
+	endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
+	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
+	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
+
+	Client.C, _ = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
+
+	os.Exit(m.Run())
+}
+
 func TestCreateSecurityGroup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -16,7 +31,7 @@ func TestCreateSecurityGroup(t *testing.T) {
 	fwName, teardown := setupTestCreateSecurityGroup(t)
 	defer teardown(ctx, t)
 
-	if err := CreateSecurityGroup(ctx, fwName, fwName, ""); err != nil {
+	if err := Client.CreateSecurityGroup(ctx, fwName, fwName, ""); err != nil {
 		t.Error(err)
 	}
 
@@ -60,7 +75,7 @@ func TestAddRuleToSecurityGroup(t *testing.T) {
 		},
 	}
 
-	if err := AddRuleToSecurityGroup(ctx, fwName, permissions); err != nil {
+	if err := Client.AddRuleToSecurityGroup(ctx, fwName, permissions); err != nil {
 		t.Error(err)
 	}
 
@@ -101,7 +116,7 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 
 	serverName := "tanishiTest"
 
-	if err := RegisterInstancesWithSecurityGroup(ctx, fwName, serverName); err != nil {
+	if err := Client.RegisterInstancesWithSecurityGroup(ctx, fwName, serverName); err != nil {
 		t.Error(err)
 	}
 
@@ -183,22 +198,7 @@ func TestGenerateAuthorizeSecurityGroupIngressInput(t *testing.T) {
 	}
 }
 
-func commonSetupTest(t *testing.T) {
-	endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
-	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
-	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
-
-	var err error
-	Client.C, err = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func setupTestCreateSecurityGroup(t *testing.T) (string, func(context.Context, *testing.T)) {
-	commonSetupTest(t)
-
 	fwName := "nifwallTest"
 
 	return fwName, func(ctx context.Context, t *testing.T) {
@@ -213,8 +213,6 @@ func setupTestCreateSecurityGroup(t *testing.T) (string, func(context.Context, *
 }
 
 func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
-	commonSetupTest(t)
-
 	fwName := "nifwallRuleTest"
 
 	param := &nifcloud.CreateSecurityGroupInput{
@@ -261,8 +259,6 @@ func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string,
 }
 
 func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
-	commonSetupTest(t)
-
 	fwName := "nifRegister"
 
 	param := &nifcloud.CreateSecurityGroupInput{
@@ -313,9 +309,7 @@ func TestListInstances(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	commonSetupTest(t)
-
-	if _, err := ListInstances(ctx); err != nil {
+	if _, err := Client.ListInstances(ctx); err != nil {
 		t.Error(err)
 	}
 }
@@ -324,10 +318,9 @@ func TestListInappropriateInstances(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	commonSetupTest(t)
 	appropriateFWName := "nifwall"
 
-	if _, err := ListInappropriateInstances(ctx, appropriateFWName); err != nil {
+	if _, err := Client.ListInappropriateInstances(ctx, appropriateFWName); err != nil {
 		t.Error(err)
 	}
 }
