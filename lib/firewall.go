@@ -7,7 +7,7 @@ import (
 	nifcloud "github.com/tanishi/go-nifcloud"
 )
 
-// Client.C is for using nifcloud api
+// Client is for using nifcloud api
 var Client client
 
 // ListInappropriateInstances returns inappropriate instances name
