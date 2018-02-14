@@ -14,6 +14,7 @@ type client struct {
 	C NifCloud
 }
 
+// NifCloud is interface for go-nifcloud mock
 type NifCloud interface {
 	AuthorizeSecurityGroupIngress(context.Context, *nifcloud.AuthorizeSecurityGroupIngressInput) (*nifcloud.AuthorizeSecurityGroupIngressOutput, error)
 	CreateSecurityGroup(context.Context, *nifcloud.CreateSecurityGroupInput) (*nifcloud.CreateSecurityGroupOutput, error)
