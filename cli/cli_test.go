@@ -12,15 +12,80 @@ import (
 )
 
 func TestRun(t *testing.T) {
+	t.Run("list", func(t *testing.T) {
+		outStream := new(bytes.Buffer)
+
+		cli := &CLI{
+			OutStream: outStream,
+			ErrStream: outStream,
+			Client:    nifwall.NewClient(&Mock{}),
+		}
+
+		status := cli.Run(strings.Split("nifwall list", " "))
+
+		if status != exitCodeOK {
+			t.Errorf("ExitStatus=%d, want %d", status, exitCodeOK)
+		}
+
+		actual := outStream.String()
+		expected := []string{"[", "test1", "test2", "test3", "test4", "test5", "]"}
+		for _, e := range expected {
+			if !strings.Contains(actual, e) {
+				t.Errorf("expected: %v, but: %v", expected, actual)
+			}
+		}
+	})
+	t.Run("update", func(t *testing.T) {
+		outStream := new(bytes.Buffer)
+
+		cli := &CLI{
+			OutStream: outStream,
+			ErrStream: outStream,
+			Client:    nifwall.NewClient(&Mock{}),
+		}
+
+		status := cli.Run(strings.Split("nifwall update -f ../examples/example.yml", " "))
+
+		if status != exitCodeOK {
+			t.Errorf("ExitStatus=%d, want %d", status, exitCodeOK)
+		}
+
+		actual := outStream.String()
+		expected := ""
+
+		if expected != actual {
+			t.Errorf("expected: %v, but: %v", expected, actual)
+		}
+	})
+	t.Run("apply", func(t *testing.T) {
+		outStream := new(bytes.Buffer)
+
+		cli := &CLI{
+			OutStream: outStream,
+			ErrStream: outStream,
+			Client:    nifwall.NewClient(&Mock{}),
+		}
+
+		status := cli.Run(strings.Split("nifwall apply test", " "))
+
+		if status != exitCodeOK {
+			t.Errorf("ExitStatus=%d, want %d", status, exitCodeOK)
+		}
+
+		actual := outStream.String()
+		expected := ""
+
+		if expected != actual {
+			t.Errorf("expected: %v, but: %v", expected, actual)
+		}
+	})
+
 	cases := []struct {
 		args     string
 		expected string
 	}{
 		{"nifwall -version", fmt.Sprintf("nifwall version %s\n", version)},
 		{"nifwall", fmt.Sprintf("list or update or apply")},
-		{"nifwall list", ""},
-		{"nifwall update", ""},
-		{"nifwall apply test", ""},
 	}
 
 	for _, c := range cases {
