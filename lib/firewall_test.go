@@ -23,46 +23,6 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-type mock struct {
-	NifCloud
-}
-
-func (m *mock) DescribeInstanceAttribute(ctx context.Context, param *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error) {
-	return m.MockDescribeInstanceAttribute(ctx, param)
-}
-
-func (m *mock) MockDescribeInstanceAttribute(ctx context.Context, param *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error) {
-	return &nifcloud.DescribeInstanceAttributeOutput{
-		GroupID: "groupID",
-	}, nil
-}
-
-func (m *mock) DescribeInstances(ctx context.Context, param *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error) {
-	return m.MockDescribeInstances(ctx, param)
-}
-
-func (m *mock) MockDescribeInstances(ctx context.Context, param *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error) {
-	return &nifcloud.DescribeInstancesOutput{
-		InstancesSet: []nifcloud.InstancesItem{
-			{
-				InstanceID: "test1",
-			},
-			{
-				InstanceID: "test2",
-			},
-			{
-				InstanceID: "test3",
-			},
-			{
-				InstanceID: "test4",
-			},
-			{
-				InstanceID: "test5",
-			},
-		},
-	}, nil
-}
-
 func TestCreateSecurityGroup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -362,4 +322,63 @@ func TestListInappropriateInstances(t *testing.T) {
 	if _, err := Client.ListInappropriateInstances(ctx, appropriateFWName); err != nil {
 		t.Error(err)
 	}
+}
+
+type mock struct {
+	NifCloud
+}
+
+func (m *mock) DescribeInstanceAttribute(ctx context.Context, param *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error) {
+	return m.MockDescribeInstanceAttribute(ctx, param)
+}
+
+func (m *mock) MockDescribeInstanceAttribute(ctx context.Context, param *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error) {
+	return &nifcloud.DescribeInstanceAttributeOutput{
+		GroupID: "groupID",
+	}, nil
+}
+
+func (m *mock) DescribeInstances(ctx context.Context, param *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error) {
+	return m.MockDescribeInstances(ctx, param)
+}
+
+func (m *mock) MockDescribeInstances(ctx context.Context, param *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error) {
+	return &nifcloud.DescribeInstancesOutput{
+		InstancesSet: []nifcloud.InstancesItem{
+			{
+				InstanceID: "test1",
+			},
+			{
+				InstanceID: "test2",
+			},
+			{
+				InstanceID: "test3",
+			},
+			{
+				InstanceID: "test4",
+			},
+			{
+				InstanceID: "test5",
+			},
+		},
+	}, nil
+}
+
+func (m *mock) DescribeSecurityGroups(ctx context.Context, param *nifcloud.DescribeSecurityGroupsInput) (*nifcloud.DescribeSecurityGroupsOutput, error) {
+	return &nifcloud.DescribeSecurityGroupsOutput{
+		SecurityGroupInfo: []nifcloud.SecurityGroupInfoItem{
+			{
+				GroupStatus: "applied",
+				GroupName:   param.GroupNames[0],
+			},
+		},
+	}, nil
+}
+
+func (m *mock) CreateSecurityGroup(ctx context.Context, param *nifcloud.CreateSecurityGroupInput) (*nifcloud.CreateSecurityGroupOutput, error) {
+	return &nifcloud.CreateSecurityGroupOutput{}, nil
+}
+
+func (m *mock) DeleteSecurityGroup(ctx context.Context, param *nifcloud.DeleteSecurityGroupInput) (*nifcloud.DeleteSecurityGroupOutput, error) {
+	return &nifcloud.DeleteSecurityGroupOutput{}, nil
 }
