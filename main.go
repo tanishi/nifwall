@@ -13,7 +13,7 @@ func main() {
 	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
 	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
 
-	nifclient, _ = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
+	nifclient, _ := nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
 	client := nifwall.NewClient(nifclient)
 
 	c := &cli.CLI{
