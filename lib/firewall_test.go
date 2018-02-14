@@ -2,6 +2,7 @@ package nifwall
 
 import (
 	"context"
+	"flag"
 	"os"
 	"reflect"
 	"testing"
@@ -10,6 +11,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	flag.Parse()
 	endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
 	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
 	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
@@ -370,6 +372,11 @@ func (m *mock) DescribeSecurityGroups(ctx context.Context, param *nifcloud.Descr
 			{
 				GroupStatus: "applied",
 				GroupName:   param.GroupNames[0],
+				IPPermission: []nifcloud.IPPermissionItem{
+					{
+						IPProtocol: "HTTP",
+					},
+				},
 			},
 		},
 	}, nil
@@ -381,4 +388,8 @@ func (m *mock) CreateSecurityGroup(ctx context.Context, param *nifcloud.CreateSe
 
 func (m *mock) DeleteSecurityGroup(ctx context.Context, param *nifcloud.DeleteSecurityGroupInput) (*nifcloud.DeleteSecurityGroupOutput, error) {
 	return &nifcloud.DeleteSecurityGroupOutput{}, nil
+}
+
+func (m *mock) AuthorizeSecurityGroupIngress(ctx context.Context, param *nifcloud.AuthorizeSecurityGroupIngressInput) (*nifcloud.AuthorizeSecurityGroupIngressOutput, error) {
+	return &nifcloud.AuthorizeSecurityGroupIngressOutput{}, nil
 }
