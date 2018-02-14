@@ -29,7 +29,7 @@ func TestCreateSecurityGroup(t *testing.T) {
 				GroupNames: []string{fwName},
 			}
 
-			res, err := Client.c.DescribeSecurityGroups(ctx, param)
+			res, err := Client.C.DescribeSecurityGroups(ctx, param)
 
 			if err != nil {
 				t.Errorf("Not Created")
@@ -74,7 +74,7 @@ func TestAddRuleToSecurityGroup(t *testing.T) {
 		}
 
 		for {
-			res, err := Client.c.DescribeSecurityGroups(ctx, param)
+			res, err := Client.C.DescribeSecurityGroups(ctx, param)
 
 			if err != nil {
 				t.Errorf("Not Created")
@@ -115,7 +115,7 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 		}
 
 		for {
-			res, err := Client.c.DescribeSecurityGroups(ctx, param)
+			res, err := Client.C.DescribeSecurityGroups(ctx, param)
 
 			if err != nil {
 				t.Errorf("Not Created")
@@ -189,7 +189,7 @@ func commonSetupTest(t *testing.T) {
 	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
 
 	var err error
-	Client.c, err = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
+	Client.C, err = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
 
 	if err != nil {
 		t.Fatal(err)
@@ -206,7 +206,7 @@ func setupTestCreateSecurityGroup(t *testing.T) (string, func(context.Context, *
 			GroupName: fwName,
 		}
 
-		if _, err := Client.c.DeleteSecurityGroup(ctx, param); err != nil {
+		if _, err := Client.C.DeleteSecurityGroup(ctx, param); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -221,7 +221,7 @@ func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string,
 		GroupName: fwName,
 	}
 
-	Client.c.CreateSecurityGroup(ctx, param)
+	Client.C.CreateSecurityGroup(ctx, param)
 
 	done := make(chan struct{}, 0)
 
@@ -233,7 +233,7 @@ func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string,
 		}
 
 		for {
-			res, err := Client.c.DescribeSecurityGroups(ctx, param)
+			res, err := Client.C.DescribeSecurityGroups(ctx, param)
 
 			if err != nil {
 				t.Errorf("Not Created")
@@ -254,7 +254,7 @@ func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string,
 			GroupName: fwName,
 		}
 
-		if _, err := Client.c.DeleteSecurityGroup(ctx, param); err != nil {
+		if _, err := Client.C.DeleteSecurityGroup(ctx, param); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -270,7 +270,7 @@ func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing
 		AvailabilityZone: "west-12",
 	}
 
-	Client.c.CreateSecurityGroup(ctx, param)
+	Client.C.CreateSecurityGroup(ctx, param)
 
 	done := make(chan struct{}, 0)
 
@@ -282,7 +282,7 @@ func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing
 		}
 
 		for {
-			res, err := Client.c.DescribeSecurityGroups(ctx, param)
+			res, err := Client.C.DescribeSecurityGroups(ctx, param)
 
 			if err != nil {
 				t.Errorf("Not Created")
@@ -303,7 +303,7 @@ func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing
 			GroupName: fwName,
 		}
 
-		if _, err := Client.c.DeleteSecurityGroup(ctx, param); err != nil {
+		if _, err := Client.C.DeleteSecurityGroup(ctx, param); err != nil {
 			t.Fatal(err)
 		}
 	}

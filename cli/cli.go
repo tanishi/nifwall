@@ -50,7 +50,7 @@ func (c *CLI) Run(args []string) int {
 	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
 	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
 
-	nifwall.Client, _ = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
+	nifwall.Client.C, _ = nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
