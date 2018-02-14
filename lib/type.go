@@ -10,8 +10,14 @@ import (
 	nifcloud "github.com/tanishi/go-nifcloud"
 )
 
-type client struct {
+type Client struct {
 	C NifCloud
+}
+
+func NewClient(n NifCloud) *Client {
+	return &Client{
+		C: n,
+	}
 }
 
 // NifCloud is interface for go-nifcloud mock
