@@ -12,13 +12,14 @@ import (
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
-	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
-	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
 
 	if testing.Short() {
 		client = NewClient(&Mock{})
 	} else {
+		endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
+		accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
+		secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
+
 		c, _ := nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
 		client = NewClient(c)
 	}
@@ -148,6 +149,29 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 	}()
 
 	<-done
+}
+
+func TestListInstances(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if _, err := client.ListInstances(ctx); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestListInappropriateInstances(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	fwName, teardown := setupTestListInappropriateInstances(ctx, t)
+	defer teardown(ctx, t)
+
+	appropriateFWNames := []string{fwName}
+
+	if _, err := client.ListInappropriateInstances(ctx, appropriateFWNames); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestConvert(t *testing.T) {
@@ -304,29 +328,6 @@ func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing
 		if _, err := client.C.DeleteSecurityGroup(ctx, param); err != nil {
 			t.Fatal(err)
 		}
-	}
-}
-
-func TestListInstances(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	if _, err := client.ListInstances(ctx); err != nil {
-		t.Error(err)
-	}
-}
-
-func TestListInappropriateInstances(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	fwName, teardown := setupTestListInappropriateInstances(ctx, t)
-	defer teardown(ctx, t)
-
-	appropriateFWNames := []string{fwName}
-
-	if _, err := client.ListInappropriateInstances(ctx, appropriateFWNames); err != nil {
-		t.Error(err)
 	}
 }
 
