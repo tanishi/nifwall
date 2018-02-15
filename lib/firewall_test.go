@@ -102,8 +102,11 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fwName, teardown := setupTestRegisterInstancesWithSecurityGroup(ctx, t)
-	defer teardown(ctx, t, fwName)
+	fwName := "nifRegister"
+	zone := "west-12"
+
+	setupFirewallGroup(ctx, t, fwName, zone)
+	defer teardownFirewallGroup(ctx, t, fwName)
 
 	serverName := "tanishiTest"
 
@@ -202,15 +205,6 @@ func TestGenerateAuthorizeSecurityGroupIngressInput(t *testing.T) {
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("expected: %v,\nbut: %v", expected, actual)
 	}
-}
-
-func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T, string)) {
-	fwName := "nifRegister"
-	zone := "west-12"
-
-	setupFirewallGroup(ctx, t, fwName, zone)
-
-	return fwName, teardownFirewallGroup
 }
 
 func setupTestListInappropriateInstances(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T, string)) {
