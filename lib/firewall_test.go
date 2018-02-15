@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 	"reflect"
+	"sync"
 	"testing"
 
 	nifcloud "github.com/tanishi/go-nifcloud"
@@ -38,15 +39,17 @@ func TestCreateSecurityGroup(t *testing.T) {
 		t.Error(err)
 	}
 
-	done := make(chan *nifcloud.DescribeSecurityGroupsOutput, 0)
+	wg := new(sync.WaitGroup)
 
 	go func() {
-		defer close(done)
-		for {
-			param := &nifcloud.DescribeSecurityGroupsInput{
-				GroupNames: []string{fwName},
-			}
+		wg.Add(1)
+		defer wg.Done()
 
+		param := &nifcloud.DescribeSecurityGroupsInput{
+			GroupNames: []string{fwName},
+		}
+
+		for {
 			res, err := client.C.DescribeSecurityGroups(ctx, param)
 
 			if err != nil {
@@ -61,7 +64,7 @@ func TestCreateSecurityGroup(t *testing.T) {
 		}
 	}()
 
-	<-done
+	wg.Wait()
 }
 
 func TestAddRuleToSecurityGroup(t *testing.T) {
@@ -82,10 +85,11 @@ func TestAddRuleToSecurityGroup(t *testing.T) {
 		t.Error(err)
 	}
 
-	done := make(chan *nifcloud.DescribeSecurityGroupsOutput, 0)
+	wg := new(sync.WaitGroup)
 
 	go func() {
-		defer close(done)
+		wg.Add(1)
+		defer wg.Done()
 
 		param := &nifcloud.DescribeSecurityGroupsInput{
 			GroupNames: []string{fwName},
@@ -107,7 +111,7 @@ func TestAddRuleToSecurityGroup(t *testing.T) {
 		}
 	}()
 
-	<-done
+	wg.Wait()
 }
 
 func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
@@ -123,10 +127,11 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 		t.Error(err)
 	}
 
-	done := make(chan *nifcloud.DescribeSecurityGroupsOutput, 0)
+	wg := new(sync.WaitGroup)
 
 	go func() {
-		defer close(done)
+		wg.Add(1)
+		defer wg.Done()
 
 		param := &nifcloud.DescribeSecurityGroupsInput{
 			GroupNames: []string{fwName},
@@ -148,7 +153,7 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 		}
 	}()
 
-	<-done
+	wg.Wait()
 }
 
 func TestListInstances(t *testing.T) {
@@ -247,10 +252,11 @@ func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string,
 
 	client.C.CreateSecurityGroup(ctx, param)
 
-	done := make(chan struct{}, 0)
+	wg := new(sync.WaitGroup)
 
 	go func() {
-		defer close(done)
+		wg.Add(1)
+		defer wg.Done()
 
 		param := &nifcloud.DescribeSecurityGroupsInput{
 			GroupNames: []string{fwName},
@@ -271,7 +277,7 @@ func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string,
 		}
 	}()
 
-	<-done
+	wg.Wait()
 
 	return fwName, func(ctx context.Context, t *testing.T) {
 		param := &nifcloud.DeleteSecurityGroupInput{
@@ -294,10 +300,11 @@ func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing
 
 	client.C.CreateSecurityGroup(ctx, param)
 
-	done := make(chan struct{}, 0)
+	wg := new(sync.WaitGroup)
 
 	go func() {
-		defer close(done)
+		wg.Add(1)
+		defer wg.Done()
 
 		param := &nifcloud.DescribeSecurityGroupsInput{
 			GroupNames: []string{fwName},
@@ -318,7 +325,7 @@ func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing
 		}
 	}()
 
-	<-done
+	wg.Wait()
 
 	return fwName, func(ctx context.Context, t *testing.T) {
 		param := &nifcloud.DeleteSecurityGroupInput{
@@ -340,10 +347,11 @@ func setupTestListInappropriateInstances(ctx context.Context, t *testing.T) (str
 
 	client.C.CreateSecurityGroup(ctx, param)
 
-	done := make(chan struct{}, 0)
+	wg := new(sync.WaitGroup)
 
 	go func() {
-		defer close(done)
+		wg.Add(1)
+		defer wg.Done()
 
 		param := &nifcloud.DescribeSecurityGroupsInput{
 			GroupNames: []string{fwName},
@@ -364,7 +372,7 @@ func setupTestListInappropriateInstances(ctx context.Context, t *testing.T) (str
 		}
 	}()
 
-	<-done
+	wg.Done()
 
 	return fwName, func(ctx context.Context, t *testing.T) {
 		param := &nifcloud.DeleteSecurityGroupInput{
