@@ -382,20 +382,12 @@ type Mock struct {
 }
 
 func (m *Mock) DescribeInstanceAttribute(ctx context.Context, param *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error) {
-	return m.MockDescribeInstanceAttribute(ctx, param)
-}
-
-func (m *Mock) MockDescribeInstanceAttribute(ctx context.Context, param *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error) {
 	return &nifcloud.DescribeInstanceAttributeOutput{
 		GroupID: "groupID",
 	}, nil
 }
 
 func (m *Mock) DescribeInstances(ctx context.Context, param *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error) {
-	return m.MockDescribeInstances(ctx, param)
-}
-
-func (m *Mock) MockDescribeInstances(ctx context.Context, param *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error) {
 	return &nifcloud.DescribeInstancesOutput{
 		InstancesSet: []nifcloud.InstancesItem{
 			{
