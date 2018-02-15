@@ -32,7 +32,7 @@ func TestCreateSecurityGroup(t *testing.T) {
 	defer cancel()
 
 	fwName, teardown := setupTestCreateSecurityGroup(t)
-	defer teardown(ctx, t)
+	defer teardown(ctx, t, fwName)
 
 	if err := client.CreateSecurityGroup(ctx, fwName, fwName, ""); err != nil {
 		t.Error(err)
@@ -62,7 +62,7 @@ func TestAddRuleToSecurityGroup(t *testing.T) {
 	defer cancel()
 
 	fwName, teardown := setupTestAddRuleToSecurityGroup(ctx, t)
-	defer teardown(ctx, t)
+	defer teardown(ctx, t, fwName)
 
 	permissions := []ipPermission{
 		{
@@ -100,7 +100,7 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 	defer cancel()
 
 	fwName, teardown := setupTestRegisterInstancesWithSecurityGroup(ctx, t)
-	defer teardown(ctx, t)
+	defer teardown(ctx, t, fwName)
 
 	serverName := "tanishiTest"
 
@@ -142,7 +142,7 @@ func TestListInappropriateInstances(t *testing.T) {
 	defer cancel()
 
 	fwName, teardown := setupTestListInappropriateInstances(ctx, t)
-	defer teardown(ctx, t)
+	defer teardown(ctx, t, fwName)
 
 	appropriateFWNames := []string{fwName}
 
@@ -201,102 +201,41 @@ func TestGenerateAuthorizeSecurityGroupIngressInput(t *testing.T) {
 	}
 }
 
-func setupTestCreateSecurityGroup(t *testing.T) (string, func(context.Context, *testing.T)) {
+func setupTestCreateSecurityGroup(t *testing.T) (string, func(context.Context, *testing.T, string)) {
 	fwName := "nifwallTest"
 
-	return fwName, func(ctx context.Context, t *testing.T) {
-		param := &nifcloud.DeleteSecurityGroupInput{
-			GroupName: fwName,
-		}
-
-		if _, err := client.C.DeleteSecurityGroup(ctx, param); err != nil {
-			t.Fatal(err)
-		}
-	}
+	return fwName, teardownFirewallGroup
 }
 
-func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
+func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T, string)) {
 	fwName := "nifwallRuleTest"
 
-	param := &nifcloud.CreateSecurityGroupInput{
-		GroupName: fwName,
-	}
+	setupFirewallGroup(ctx, t, fwName, "")
 
-	client.C.CreateSecurityGroup(ctx, param)
-
-	for {
-		param := &nifcloud.DescribeSecurityGroupsInput{
-			GroupNames: []string{fwName},
-		}
-
-		res, err := client.C.DescribeSecurityGroups(ctx, param)
-
-		if err != nil {
-			t.Errorf("Not Created")
-		}
-
-		status := res.SecurityGroupInfo[0].GroupStatus
-
-		if status == "applied" {
-			break
-		}
-	}
-
-	return fwName, func(ctx context.Context, t *testing.T) {
-		param := &nifcloud.DeleteSecurityGroupInput{
-			GroupName: fwName,
-		}
-
-		if _, err := client.C.DeleteSecurityGroup(ctx, param); err != nil {
-			t.Fatal(err)
-		}
-	}
+	return fwName, teardownFirewallGroup
 }
 
-func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
+func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T, string)) {
 	fwName := "nifRegister"
+	zone := "west-12"
 
-	param := &nifcloud.CreateSecurityGroupInput{
-		GroupName:        fwName,
-		AvailabilityZone: "west-12",
-	}
+	setupFirewallGroup(ctx, t, fwName, zone)
 
-	client.C.CreateSecurityGroup(ctx, param)
-
-	for {
-		param := &nifcloud.DescribeSecurityGroupsInput{
-			GroupNames: []string{fwName},
-		}
-
-		res, err := client.C.DescribeSecurityGroups(ctx, param)
-
-		if err != nil {
-			t.Errorf("Not Created")
-		}
-
-		status := res.SecurityGroupInfo[0].GroupStatus
-
-		if status == "applied" {
-			break
-		}
-	}
-
-	return fwName, func(ctx context.Context, t *testing.T) {
-		param := &nifcloud.DeleteSecurityGroupInput{
-			GroupName: fwName,
-		}
-
-		if _, err := client.C.DeleteSecurityGroup(ctx, param); err != nil {
-			t.Fatal(err)
-		}
-	}
+	return fwName, teardownFirewallGroup
 }
 
-func setupTestListInappropriateInstances(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
+func setupTestListInappropriateInstances(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T, string)) {
 	fwName := "nifwall"
 
+	setupFirewallGroup(ctx, t, fwName, "")
+
+	return fwName, teardownFirewallGroup
+}
+
+func setupFirewallGroup(ctx context.Context, t *testing.T, fwName, zone string) {
 	param := &nifcloud.CreateSecurityGroupInput{
-		GroupName: fwName,
+		GroupName:        fwName,
+		AvailabilityZone: zone,
 	}
 
 	client.C.CreateSecurityGroup(ctx, param)
@@ -319,14 +258,15 @@ func setupTestListInappropriateInstances(ctx context.Context, t *testing.T) (str
 		}
 	}
 
-	return fwName, func(ctx context.Context, t *testing.T) {
-		param := &nifcloud.DeleteSecurityGroupInput{
-			GroupName: fwName,
-		}
+}
 
-		if _, err := client.C.DeleteSecurityGroup(ctx, param); err != nil {
-			t.Fatal(err)
-		}
+func teardownFirewallGroup(ctx context.Context, t *testing.T, fwName string) {
+	param := &nifcloud.DeleteSecurityGroupInput{
+		GroupName: fwName,
+	}
+
+	if _, err := client.C.DeleteSecurityGroup(ctx, param); err != nil {
+		t.Fatal(err)
 	}
 }
 
