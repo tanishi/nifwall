@@ -5,7 +5,6 @@ import (
 	"flag"
 	"os"
 	"reflect"
-	"sync"
 	"testing"
 
 	nifcloud "github.com/tanishi/go-nifcloud"
@@ -39,32 +38,23 @@ func TestCreateSecurityGroup(t *testing.T) {
 		t.Error(err)
 	}
 
-	wg := new(sync.WaitGroup)
+	param := &nifcloud.DescribeSecurityGroupsInput{
+		GroupNames: []string{fwName},
+	}
 
-	go func() {
-		wg.Add(1)
-		defer wg.Done()
+	for {
+		res, err := client.C.DescribeSecurityGroups(ctx, param)
 
-		param := &nifcloud.DescribeSecurityGroupsInput{
-			GroupNames: []string{fwName},
+		if err != nil {
+			t.Errorf("Not Created")
 		}
 
-		for {
-			res, err := client.C.DescribeSecurityGroups(ctx, param)
+		status := res.SecurityGroupInfo[0].GroupStatus
 
-			if err != nil {
-				t.Errorf("Not Created")
-			}
-
-			status := res.SecurityGroupInfo[0].GroupStatus
-
-			if status == "applied" {
-				break
-			}
+		if status == "applied" {
+			break
 		}
-	}()
-
-	wg.Wait()
+	}
 }
 
 func TestAddRuleToSecurityGroup(t *testing.T) {
@@ -85,33 +75,24 @@ func TestAddRuleToSecurityGroup(t *testing.T) {
 		t.Error(err)
 	}
 
-	wg := new(sync.WaitGroup)
+	param := &nifcloud.DescribeSecurityGroupsInput{
+		GroupNames: []string{fwName},
+	}
 
-	go func() {
-		wg.Add(1)
-		defer wg.Done()
+	for {
+		res, err := client.C.DescribeSecurityGroups(ctx, param)
 
-		param := &nifcloud.DescribeSecurityGroupsInput{
-			GroupNames: []string{fwName},
+		if err != nil {
+			t.Errorf("Not Created")
 		}
 
-		for {
-			res, err := client.C.DescribeSecurityGroups(ctx, param)
+		status := res.SecurityGroupInfo[0].GroupStatus
+		resPermissions := res.SecurityGroupInfo[0].IPPermission
 
-			if err != nil {
-				t.Errorf("Not Created")
-			}
-
-			status := res.SecurityGroupInfo[0].GroupStatus
-			resPermissions := res.SecurityGroupInfo[0].IPPermission
-
-			if status == "applied" && len(resPermissions) > 0 {
-				break
-			}
+		if status == "applied" && len(resPermissions) > 0 {
+			break
 		}
-	}()
-
-	wg.Wait()
+	}
 }
 
 func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
@@ -127,33 +108,24 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 		t.Error(err)
 	}
 
-	wg := new(sync.WaitGroup)
+	param := &nifcloud.DescribeSecurityGroupsInput{
+		GroupNames: []string{fwName},
+	}
 
-	go func() {
-		wg.Add(1)
-		defer wg.Done()
+	for {
+		res, err := client.C.DescribeSecurityGroups(ctx, param)
 
-		param := &nifcloud.DescribeSecurityGroupsInput{
-			GroupNames: []string{fwName},
+		if err != nil {
+			t.Errorf("Not Created")
 		}
 
-		for {
-			res, err := client.C.DescribeSecurityGroups(ctx, param)
+		status := res.SecurityGroupInfo[0].GroupStatus
+		resInstances := res.SecurityGroupInfo[0].Instances
 
-			if err != nil {
-				t.Errorf("Not Created")
-			}
-
-			status := res.SecurityGroupInfo[0].GroupStatus
-			resInstances := res.SecurityGroupInfo[0].Instances
-
-			if status == "applied" && len(resInstances) > 0 {
-				break
-			}
+		if status == "applied" && len(resInstances) > 0 {
+			break
 		}
-	}()
-
-	wg.Wait()
+	}
 }
 
 func TestListInstances(t *testing.T) {
@@ -252,32 +224,23 @@ func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string,
 
 	client.C.CreateSecurityGroup(ctx, param)
 
-	wg := new(sync.WaitGroup)
-
-	go func() {
-		wg.Add(1)
-		defer wg.Done()
-
+	for {
 		param := &nifcloud.DescribeSecurityGroupsInput{
 			GroupNames: []string{fwName},
 		}
 
-		for {
-			res, err := client.C.DescribeSecurityGroups(ctx, param)
+		res, err := client.C.DescribeSecurityGroups(ctx, param)
 
-			if err != nil {
-				t.Errorf("Not Created")
-			}
-
-			status := res.SecurityGroupInfo[0].GroupStatus
-
-			if status == "applied" {
-				break
-			}
+		if err != nil {
+			t.Errorf("Not Created")
 		}
-	}()
 
-	wg.Wait()
+		status := res.SecurityGroupInfo[0].GroupStatus
+
+		if status == "applied" {
+			break
+		}
+	}
 
 	return fwName, func(ctx context.Context, t *testing.T) {
 		param := &nifcloud.DeleteSecurityGroupInput{
@@ -300,32 +263,23 @@ func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing
 
 	client.C.CreateSecurityGroup(ctx, param)
 
-	wg := new(sync.WaitGroup)
-
-	go func() {
-		wg.Add(1)
-		defer wg.Done()
-
+	for {
 		param := &nifcloud.DescribeSecurityGroupsInput{
 			GroupNames: []string{fwName},
 		}
 
-		for {
-			res, err := client.C.DescribeSecurityGroups(ctx, param)
+		res, err := client.C.DescribeSecurityGroups(ctx, param)
 
-			if err != nil {
-				t.Errorf("Not Created")
-			}
-
-			status := res.SecurityGroupInfo[0].GroupStatus
-
-			if status == "applied" {
-				break
-			}
+		if err != nil {
+			t.Errorf("Not Created")
 		}
-	}()
 
-	wg.Wait()
+		status := res.SecurityGroupInfo[0].GroupStatus
+
+		if status == "applied" {
+			break
+		}
+	}
 
 	return fwName, func(ctx context.Context, t *testing.T) {
 		param := &nifcloud.DeleteSecurityGroupInput{
@@ -347,32 +301,23 @@ func setupTestListInappropriateInstances(ctx context.Context, t *testing.T) (str
 
 	client.C.CreateSecurityGroup(ctx, param)
 
-	wg := new(sync.WaitGroup)
-
-	go func() {
-		wg.Add(1)
-		defer wg.Done()
-
+	for {
 		param := &nifcloud.DescribeSecurityGroupsInput{
 			GroupNames: []string{fwName},
 		}
 
-		for {
-			res, err := client.C.DescribeSecurityGroups(ctx, param)
+		res, err := client.C.DescribeSecurityGroups(ctx, param)
 
-			if err != nil {
-				t.Errorf("Not Created")
-			}
-
-			status := res.SecurityGroupInfo[0].GroupStatus
-
-			if status == "applied" {
-				break
-			}
+		if err != nil {
+			t.Errorf("Not Created")
 		}
-	}()
 
-	wg.Done()
+		status := res.SecurityGroupInfo[0].GroupStatus
+
+		if status == "applied" {
+			break
+		}
+	}
 
 	return fwName, func(ctx context.Context, t *testing.T) {
 		param := &nifcloud.DeleteSecurityGroupInput{
