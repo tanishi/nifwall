@@ -106,7 +106,7 @@ func (c *CLI) Run(args []string) int {
 			return exitCodeParseFlagError
 		}
 
-		c.Client.RegisterInstancesWithSecurityGroup(ctx, fw, applyFlags.Arg(0))
+		c.Client.RegisterInstancesWithSecurityGroup(ctx, fw, applyFlags.Args())
 
 	default:
 		flag.PrintDefaults()

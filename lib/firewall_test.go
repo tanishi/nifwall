@@ -110,7 +110,7 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 
 	serverName := "tanishiTest"
 
-	if err := client.RegisterInstancesWithSecurityGroup(ctx, fwName, serverName); err != nil {
+	if err := client.RegisterInstancesWithSecurityGroup(ctx, fwName, []string{serverName}); err != nil {
 		t.Error(err)
 	}
 
