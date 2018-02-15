@@ -293,7 +293,7 @@ func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing
 }
 
 func setupTestListInappropriateInstances(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
-	fwName := "cldgwOnlyjpw12"
+	fwName := "nifwall"
 
 	param := &nifcloud.CreateSecurityGroupInput{
 		GroupName: fwName,
