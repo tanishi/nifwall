@@ -147,8 +147,10 @@ func TestListInappropriateInstances(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fwName, teardown := setupTestListInappropriateInstances(ctx, t)
-	defer teardown(ctx, t, fwName)
+	fwName := "nifwall"
+
+	setupFirewallGroup(ctx, t, fwName, "")
+	defer teardownFirewallGroup(ctx, t, fwName)
 
 	appropriateFWNames := []string{fwName}
 
@@ -205,14 +207,6 @@ func TestGenerateAuthorizeSecurityGroupIngressInput(t *testing.T) {
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("expected: %v,\nbut: %v", expected, actual)
 	}
-}
-
-func setupTestListInappropriateInstances(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T, string)) {
-	fwName := "nifwall"
-
-	setupFirewallGroup(ctx, t, fwName, "")
-
-	return fwName, teardownFirewallGroup
 }
 
 func setupFirewallGroup(ctx context.Context, t *testing.T, fwName, zone string) {
