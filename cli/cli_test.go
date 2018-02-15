@@ -21,7 +21,7 @@ func TestRun(t *testing.T) {
 			Client:    nifwall.NewClient(&Mock{}),
 		}
 
-		status := cli.Run(strings.Split("nifwall list", " "))
+		status := cli.Run(strings.Split("nifwall list -fw test -fw nifwall", " "))
 
 		if status != exitCodeOK {
 			t.Errorf("ExitStatus=%d, want %d", status, exitCodeOK)
@@ -31,7 +31,7 @@ func TestRun(t *testing.T) {
 		expected := []string{"[", "test1", "test2", "test3", "test4", "test5", "]"}
 		for _, e := range expected {
 			if !strings.Contains(actual, e) {
-				t.Errorf("expected: %v, but: %v", expected, actual)
+				t.Errorf("expected: %v, but: %v", e, actual)
 			}
 		}
 	})

@@ -320,10 +320,59 @@ func TestListInappropriateInstances(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	appropriateFWName := "nifwall"
+	fwName, teardown := setupTestListInappropriateInstances(ctx, t)
+	defer teardown(ctx, t)
 
-	if _, err := client.ListInappropriateInstances(ctx, appropriateFWName); err != nil {
+	appropriateFWNames := []string{fwName}
+
+	if _, err := client.ListInappropriateInstances(ctx, appropriateFWNames); err != nil {
 		t.Error(err)
+	}
+}
+
+func setupTestListInappropriateInstances(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
+	fwName := "cldgwOnlyjpw12"
+
+	param := &nifcloud.CreateSecurityGroupInput{
+		GroupName: fwName,
+	}
+
+	client.C.CreateSecurityGroup(ctx, param)
+
+	done := make(chan struct{}, 0)
+
+	go func() {
+		defer close(done)
+
+		param := &nifcloud.DescribeSecurityGroupsInput{
+			GroupNames: []string{fwName},
+		}
+
+		for {
+			res, err := client.C.DescribeSecurityGroups(ctx, param)
+
+			if err != nil {
+				t.Errorf("Not Created")
+			}
+
+			status := res.SecurityGroupInfo[0].GroupStatus
+
+			if status == "applied" {
+				break
+			}
+		}
+	}()
+
+	<-done
+
+	return fwName, func(ctx context.Context, t *testing.T) {
+		param := &nifcloud.DeleteSecurityGroupInput{
+			GroupName: fwName,
+		}
+
+		if _, err := client.C.DeleteSecurityGroup(ctx, param); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 
