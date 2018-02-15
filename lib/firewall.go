@@ -33,10 +33,10 @@ func (c *Client) AddRuleToSecurityGroup(ctx context.Context, name string, permis
 }
 
 // RegisterInstancesWithSecurityGroup apply firewall group to instance
-func (c *Client) RegisterInstancesWithSecurityGroup(ctx context.Context, fwName, serverName string) error {
+func (c *Client) RegisterInstancesWithSecurityGroup(ctx context.Context, fwName string, serverNames []string) error {
 	param := &nifcloud.RegisterInstancesWithSecurityGroupInput{
 		GroupName:   fwName,
-		InstanceIDs: []string{serverName},
+		InstanceIDs: serverNames,
 	}
 
 	_, err := c.C.RegisterInstancesWithSecurityGroup(ctx, param)
