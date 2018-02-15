@@ -12,13 +12,14 @@ import (
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
-	accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
-	secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
 
 	if testing.Short() {
 		client = NewClient(&Mock{})
 	} else {
+		endpoint := os.Getenv("NIFCLOUD_ENDPOINT")
+		accessKey := os.Getenv("NIFCLOUD_ACCESSKEY")
+		secretAccessKey := os.Getenv("NIFCLOUD_SECRET_ACCESSKEY")
+
 		c, _ := nifcloud.NewClient(endpoint, accessKey, secretAccessKey)
 		client = NewClient(c)
 	}
@@ -30,45 +31,41 @@ func TestCreateSecurityGroup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fwName, teardown := setupTestCreateSecurityGroup(t)
-	defer teardown(ctx, t)
+	fwName := "nifwallTest"
+
+	defer teardownFirewallGroup(ctx, t, fwName)
 
 	if err := client.CreateSecurityGroup(ctx, fwName, fwName, ""); err != nil {
 		t.Error(err)
 	}
 
-	done := make(chan *nifcloud.DescribeSecurityGroupsOutput, 0)
+	param := &nifcloud.DescribeSecurityGroupsInput{
+		GroupNames: []string{fwName},
+	}
 
-	go func() {
-		defer close(done)
-		for {
-			param := &nifcloud.DescribeSecurityGroupsInput{
-				GroupNames: []string{fwName},
-			}
+	for {
+		res, err := client.C.DescribeSecurityGroups(ctx, param)
 
-			res, err := client.C.DescribeSecurityGroups(ctx, param)
-
-			if err != nil {
-				t.Errorf("Not Created")
-			}
-
-			status := res.SecurityGroupInfo[0].GroupStatus
-
-			if status == "applied" {
-				break
-			}
+		if err != nil {
+			t.Errorf("Not Created")
 		}
-	}()
 
-	<-done
+		status := res.SecurityGroupInfo[0].GroupStatus
+
+		if status == "applied" {
+			break
+		}
+	}
 }
 
 func TestAddRuleToSecurityGroup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fwName, teardown := setupTestAddRuleToSecurityGroup(ctx, t)
-	defer teardown(ctx, t)
+	fwName := "nifwallRuleTest"
+
+	setupFirewallGroup(ctx, t, fwName, "")
+	defer teardownFirewallGroup(ctx, t, fwName)
 
 	permissions := []ipPermission{
 		{
@@ -81,40 +78,35 @@ func TestAddRuleToSecurityGroup(t *testing.T) {
 		t.Error(err)
 	}
 
-	done := make(chan *nifcloud.DescribeSecurityGroupsOutput, 0)
+	param := &nifcloud.DescribeSecurityGroupsInput{
+		GroupNames: []string{fwName},
+	}
 
-	go func() {
-		defer close(done)
+	for {
+		res, err := client.C.DescribeSecurityGroups(ctx, param)
 
-		param := &nifcloud.DescribeSecurityGroupsInput{
-			GroupNames: []string{fwName},
+		if err != nil {
+			t.Errorf("Not Created")
 		}
 
-		for {
-			res, err := client.C.DescribeSecurityGroups(ctx, param)
+		status := res.SecurityGroupInfo[0].GroupStatus
+		resPermissions := res.SecurityGroupInfo[0].IPPermission
 
-			if err != nil {
-				t.Errorf("Not Created")
-			}
-
-			status := res.SecurityGroupInfo[0].GroupStatus
-			resPermissions := res.SecurityGroupInfo[0].IPPermission
-
-			if status == "applied" && len(resPermissions) > 0 {
-				break
-			}
+		if status == "applied" && len(resPermissions) > 0 {
+			break
 		}
-	}()
-
-	<-done
+	}
 }
 
 func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fwName, teardown := setupTestRegisterInstancesWithSecurityGroup(ctx, t)
-	defer teardown(ctx, t)
+	fwName := "nifRegister"
+	zone := "west-12"
+
+	setupFirewallGroup(ctx, t, fwName, zone)
+	defer teardownFirewallGroup(ctx, t, fwName)
 
 	serverName := "tanishiTest"
 
@@ -122,32 +114,49 @@ func TestRegisterInstancesWithSecurityGroup(t *testing.T) {
 		t.Error(err)
 	}
 
-	done := make(chan *nifcloud.DescribeSecurityGroupsOutput, 0)
+	param := &nifcloud.DescribeSecurityGroupsInput{
+		GroupNames: []string{fwName},
+	}
 
-	go func() {
-		defer close(done)
+	for {
+		res, err := client.C.DescribeSecurityGroups(ctx, param)
 
-		param := &nifcloud.DescribeSecurityGroupsInput{
-			GroupNames: []string{fwName},
+		if err != nil {
+			t.Errorf("Not Created")
 		}
 
-		for {
-			res, err := client.C.DescribeSecurityGroups(ctx, param)
+		status := res.SecurityGroupInfo[0].GroupStatus
+		resInstances := res.SecurityGroupInfo[0].Instances
 
-			if err != nil {
-				t.Errorf("Not Created")
-			}
-
-			status := res.SecurityGroupInfo[0].GroupStatus
-			resInstances := res.SecurityGroupInfo[0].Instances
-
-			if status == "applied" && len(resInstances) > 0 {
-				break
-			}
+		if status == "applied" && len(resInstances) > 0 {
+			break
 		}
-	}()
+	}
+}
 
-	<-done
+func TestListInstances(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if _, err := client.ListInstances(ctx); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestListInappropriateInstances(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	fwName := "nifwall"
+
+	setupFirewallGroup(ctx, t, fwName, "")
+	defer teardownFirewallGroup(ctx, t, fwName)
+
+	appropriateFWNames := []string{fwName}
+
+	if _, err := client.ListInappropriateInstances(ctx, appropriateFWNames); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestConvert(t *testing.T) {
@@ -200,179 +209,41 @@ func TestGenerateAuthorizeSecurityGroupIngressInput(t *testing.T) {
 	}
 }
 
-func setupTestCreateSecurityGroup(t *testing.T) (string, func(context.Context, *testing.T)) {
-	fwName := "nifwallTest"
-
-	return fwName, func(ctx context.Context, t *testing.T) {
-		param := &nifcloud.DeleteSecurityGroupInput{
-			GroupName: fwName,
-		}
-
-		if _, err := client.C.DeleteSecurityGroup(ctx, param); err != nil {
-			t.Fatal(err)
-		}
-	}
-}
-
-func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
-	fwName := "nifwallRuleTest"
-
-	param := &nifcloud.CreateSecurityGroupInput{
-		GroupName: fwName,
-	}
-
-	client.C.CreateSecurityGroup(ctx, param)
-
-	done := make(chan struct{}, 0)
-
-	go func() {
-		defer close(done)
-
-		param := &nifcloud.DescribeSecurityGroupsInput{
-			GroupNames: []string{fwName},
-		}
-
-		for {
-			res, err := client.C.DescribeSecurityGroups(ctx, param)
-
-			if err != nil {
-				t.Errorf("Not Created")
-			}
-
-			status := res.SecurityGroupInfo[0].GroupStatus
-
-			if status == "applied" {
-				break
-			}
-		}
-	}()
-
-	<-done
-
-	return fwName, func(ctx context.Context, t *testing.T) {
-		param := &nifcloud.DeleteSecurityGroupInput{
-			GroupName: fwName,
-		}
-
-		if _, err := client.C.DeleteSecurityGroup(ctx, param); err != nil {
-			t.Fatal(err)
-		}
-	}
-}
-
-func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
-	fwName := "nifRegister"
-
+func setupFirewallGroup(ctx context.Context, t *testing.T, fwName, zone string) {
 	param := &nifcloud.CreateSecurityGroupInput{
 		GroupName:        fwName,
-		AvailabilityZone: "west-12",
+		AvailabilityZone: zone,
 	}
 
 	client.C.CreateSecurityGroup(ctx, param)
 
-	done := make(chan struct{}, 0)
-
-	go func() {
-		defer close(done)
-
+	for {
 		param := &nifcloud.DescribeSecurityGroupsInput{
 			GroupNames: []string{fwName},
 		}
 
-		for {
-			res, err := client.C.DescribeSecurityGroups(ctx, param)
+		res, err := client.C.DescribeSecurityGroups(ctx, param)
 
-			if err != nil {
-				t.Errorf("Not Created")
-			}
-
-			status := res.SecurityGroupInfo[0].GroupStatus
-
-			if status == "applied" {
-				break
-			}
-		}
-	}()
-
-	<-done
-
-	return fwName, func(ctx context.Context, t *testing.T) {
-		param := &nifcloud.DeleteSecurityGroupInput{
-			GroupName: fwName,
+		if err != nil {
+			t.Errorf("Not Created")
 		}
 
-		if _, err := client.C.DeleteSecurityGroup(ctx, param); err != nil {
-			t.Fatal(err)
+		status := res.SecurityGroupInfo[0].GroupStatus
+
+		if status == "applied" {
+			break
 		}
 	}
+
 }
 
-func TestListInstances(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	if _, err := client.ListInstances(ctx); err != nil {
-		t.Error(err)
-	}
-}
-
-func TestListInappropriateInstances(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	fwName, teardown := setupTestListInappropriateInstances(ctx, t)
-	defer teardown(ctx, t)
-
-	appropriateFWNames := []string{fwName}
-
-	if _, err := client.ListInappropriateInstances(ctx, appropriateFWNames); err != nil {
-		t.Error(err)
-	}
-}
-
-func setupTestListInappropriateInstances(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T)) {
-	fwName := "cldgwOnlyjpw12"
-
-	param := &nifcloud.CreateSecurityGroupInput{
+func teardownFirewallGroup(ctx context.Context, t *testing.T, fwName string) {
+	param := &nifcloud.DeleteSecurityGroupInput{
 		GroupName: fwName,
 	}
 
-	client.C.CreateSecurityGroup(ctx, param)
-
-	done := make(chan struct{}, 0)
-
-	go func() {
-		defer close(done)
-
-		param := &nifcloud.DescribeSecurityGroupsInput{
-			GroupNames: []string{fwName},
-		}
-
-		for {
-			res, err := client.C.DescribeSecurityGroups(ctx, param)
-
-			if err != nil {
-				t.Errorf("Not Created")
-			}
-
-			status := res.SecurityGroupInfo[0].GroupStatus
-
-			if status == "applied" {
-				break
-			}
-		}
-	}()
-
-	<-done
-
-	return fwName, func(ctx context.Context, t *testing.T) {
-		param := &nifcloud.DeleteSecurityGroupInput{
-			GroupName: fwName,
-		}
-
-		if _, err := client.C.DeleteSecurityGroup(ctx, param); err != nil {
-			t.Fatal(err)
-		}
+	if _, err := client.C.DeleteSecurityGroup(ctx, param); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -381,20 +252,12 @@ type Mock struct {
 }
 
 func (m *Mock) DescribeInstanceAttribute(ctx context.Context, param *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error) {
-	return m.MockDescribeInstanceAttribute(ctx, param)
-}
-
-func (m *Mock) MockDescribeInstanceAttribute(ctx context.Context, param *nifcloud.DescribeInstanceAttributeInput) (*nifcloud.DescribeInstanceAttributeOutput, error) {
 	return &nifcloud.DescribeInstanceAttributeOutput{
 		GroupID: "groupID",
 	}, nil
 }
 
 func (m *Mock) DescribeInstances(ctx context.Context, param *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error) {
-	return m.MockDescribeInstances(ctx, param)
-}
-
-func (m *Mock) MockDescribeInstances(ctx context.Context, param *nifcloud.DescribeInstancesInput) (*nifcloud.DescribeInstancesOutput, error) {
 	return &nifcloud.DescribeInstancesOutput{
 		InstancesSet: []nifcloud.InstancesItem{
 			{
