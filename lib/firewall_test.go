@@ -31,8 +31,9 @@ func TestCreateSecurityGroup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fwName, teardown := setupTestCreateSecurityGroup(t)
-	defer teardown(ctx, t, fwName)
+	fwName := "nifwallTest"
+
+	defer teardownFirewallGroup(ctx, t, fwName)
 
 	if err := client.CreateSecurityGroup(ctx, fwName, fwName, ""); err != nil {
 		t.Error(err)
@@ -199,12 +200,6 @@ func TestGenerateAuthorizeSecurityGroupIngressInput(t *testing.T) {
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("expected: %v,\nbut: %v", expected, actual)
 	}
-}
-
-func setupTestCreateSecurityGroup(t *testing.T) (string, func(context.Context, *testing.T, string)) {
-	fwName := "nifwallTest"
-
-	return fwName, teardownFirewallGroup
 }
 
 func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T, string)) {
