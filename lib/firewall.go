@@ -11,39 +11,45 @@ import (
 var client *Client
 
 // ListInappropriateInstances returns inappropriate instances name
-func (c *Client) ListInappropriateInstances(ctx context.Context, fwName string) ([]string, error) {
-	instanceNames, err := c.ListInstances(ctx)
+func (c *Client) ListInappropriateInstances(ctx context.Context, fwNames []string) ([]string, error) {
+	list := make(chan []string, 1)
 
-	if err != nil {
-		return nil, err
+	go func() {
+		l, _ := c.ListInstances(ctx)
+		list <- l
+	}()
+
+	ichan := make(chan string, 1)
+
+	go func() {
+		defer close(ichan)
+		param := &nifcloud.DescribeSecurityGroupsInput{
+			GroupNames: fwNames,
+		}
+
+		res, _ := c.C.DescribeSecurityGroups(ctx, param)
+
+		for _, info := range res.SecurityGroupInfo {
+			for _, instance := range info.Instances {
+				ichan <- instance.InstanceID
+			}
+		}
+	}()
+
+	l := <-list
+	for i := range ichan {
+		l = func(list []string, target string) []string {
+			r := make([]string, 0)
+			for _, name := range l {
+				if name != target {
+					r = append(r, name)
+				}
+			}
+			return r
+		}(l, i)
 	}
 
-	wg := new(sync.WaitGroup)
-	mutex := new(sync.Mutex)
-	result := make([]string, 0)
-
-	for _, name := range instanceNames {
-		wg.Add(1)
-		go func(name string) {
-			defer wg.Done()
-			param := &nifcloud.DescribeInstanceAttributeInput{
-				InstanceID: name,
-				Attribute:  "groupId",
-			}
-
-			res, _ := c.C.DescribeInstanceAttribute(ctx, param)
-
-			if res.GroupID != fwName {
-				mutex.Lock()
-				result = append(result, name)
-				mutex.Unlock()
-			}
-		}(name)
-	}
-
-	wg.Wait()
-
-	return result, nil
+	return l, nil
 }
 
 // ListInstances returns instances name
