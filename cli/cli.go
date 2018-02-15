@@ -22,6 +22,17 @@ type CLI struct {
 	Client    *nifwall.Client
 }
 
+type firewallList []string
+
+func (f *firewallList) String() string {
+	return "firewall list"
+}
+
+func (f *firewallList) Set(s string) error {
+	*f = append(*f, s)
+	return nil
+}
+
 const version string = "v0.1.0"
 
 // Run execute cli
@@ -52,14 +63,14 @@ func (c *CLI) Run(args []string) int {
 	case "list":
 		listFlags := flag.NewFlagSet("list", flag.ContinueOnError)
 
-		var fw string
-		flags.StringVar(&fw, "fw", "nifwall", "specify firewall")
+		var fws firewallList
+		listFlags.Var(&fws, "fw", "specify firewall")
 
 		if err := listFlags.Parse(args[2:]); err != nil {
 			return exitCodeParseFlagError
 		}
 
-		instances, err := c.Client.ListInappropriateInstances(ctx, fw)
+		instances, err := c.Client.ListInappropriateInstances(ctx, fws)
 
 		if err != nil {
 			fmt.Fprint(c.ErrStream, err)
