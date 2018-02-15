@@ -62,8 +62,10 @@ func TestAddRuleToSecurityGroup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fwName, teardown := setupTestAddRuleToSecurityGroup(ctx, t)
-	defer teardown(ctx, t, fwName)
+	fwName := "nifwallRuleTest"
+
+	setupFirewallGroup(ctx, t, fwName, "")
+	defer teardownFirewallGroup(ctx, t, fwName)
 
 	permissions := []ipPermission{
 		{
@@ -200,14 +202,6 @@ func TestGenerateAuthorizeSecurityGroupIngressInput(t *testing.T) {
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("expected: %v,\nbut: %v", expected, actual)
 	}
-}
-
-func setupTestAddRuleToSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T, string)) {
-	fwName := "nifwallRuleTest"
-
-	setupFirewallGroup(ctx, t, fwName, "")
-
-	return fwName, teardownFirewallGroup
 }
 
 func setupTestRegisterInstancesWithSecurityGroup(ctx context.Context, t *testing.T) (string, func(context.Context, *testing.T, string)) {
